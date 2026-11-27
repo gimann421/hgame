@@ -167,6 +167,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 
 /* While spinning, the drawing is redrawn at each angle; keep every part's animation in step. */
 #hero.spin g, #hero.spin .p-eyes { animation-delay: calc(-1 * var(--el, 0ms)) !important; }
+#hero.spin .p-armL, #hero.spin .p-armR { animation: none !important; transform: none !important; }
 #hero.spin .p-skirt { animation: flare calc(var(--beat) * 2) ease-in-out infinite; }
 @keyframes flare { 0%,100% { transform: scale(1.08, .97) rotate(-2deg); } 50% { transform: scale(1.1, .96) rotate(2deg); } }
 /* shorthand: B = one beat */

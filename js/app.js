@@ -33,7 +33,7 @@
   let spinCache = {}, shownYaw = 0;
   function renderHero() {
     spinCache = {};
-    $('#char').innerHTML = drawCharacter(charView(S), shownYaw);
+    $('#char').innerHTML = drawCharacter(charView(S), 0); shownYaw = 0; lastKey = '';
     $('#pet').innerHTML = drawPet(S.pet);
     $('#petwrap').style.display = S.pet === 'none' ? 'none' : '';
     $('#bg svg').innerHTML = drawStage(S.stage);
@@ -86,11 +86,13 @@
 
   // ---------- dancing ----------
   const danceIds = DANCES.filter(d => d.id !== 'party').map(d => d.id);
-  // Spinning dances turn her around for real: she is redrawn at each angle.
+  // Spinning dances turn her around for real: she is redrawn at each angle,
+  // and her arms are posed here (in her own body) so they swing round in 3D.
+  const wave = (t, period) => Math.sin(t / period * Math.PI * 2);
   const SPINS = {
-    twirl: p => p * 360,
-    ballet: p => p * 360,
-    shimmy: p => p < 0.6 ? 0 : (1 - Math.cos((p - 0.6) / 0.4 * Math.PI)) / 2 * 360
+    twirl: { yaw: p => p * 360, arms: (t, b) => { const a = 132 + 17 * wave(t, b * 2); return { armL: a, armR: a }; } },
+    ballet: { yaw: p => p * 360, arms: (t, b) => { const a = 154 + 13 * wave(t, b * 2); return { armL: a, armR: a }; } },
+    shimmy: { yaw: p => p < 0.6 ? 0 : (1 - Math.cos((p - 0.6) / 0.4 * Math.PI)) / 2 * 360, arms: (t, b) => { const a = 137 + 7 * wave(t, b / 2); return { armL: a, armR: a }; } }
   };
   let moveId = 'none', moveStart = 0;
   function setMove(id) {
@@ -100,19 +102,25 @@
     hero.classList.add('m-' + id);
     moveId = id; moveStart = performance.now();
     hero.style.setProperty('--el', '0ms');
+    lastKey = '';
     if (SPINS[id]) hero.classList.add('spin');
     else if (shownYaw !== 0) { shownYaw = 0; $('#char').innerHTML = drawCharacter(charView(S), 0); }
   }
+  let lastDraw = 0, lastKey = '';
   function spinFrame(now) {
     requestAnimationFrame(spinFrame);
-    if (!dancing || !SPINS[moveId]) return;
+    const spin = SPINS[moveId];
+    if (!dancing || !spin || now - lastDraw < 30) return;
     const beatMs = 60000 / byId(TRACKS, S.track).bpm, el = now - moveStart;
     const p = (el % (beatMs * 4)) / (beatMs * 4);
-    const yaw = Math.round(SPINS[moveId](p) / 6) * 6 % 360;
-    if (yaw === shownYaw) return;
-    shownYaw = yaw;
+    const yaw = Math.round(spin.yaw(p) / 4) * 4 % 360;
+    const pose = spin.arms(el, beatMs);
+    pose.armL = Math.round(pose.armL / 2) * 2; pose.armR = Math.round(pose.armR / 2) * 2;
+    const key = yaw + '|' + pose.armL + '|' + pose.armR;
+    if (key === lastKey) return;
+    lastKey = key; lastDraw = now; shownYaw = yaw;
     $('#hero').style.setProperty('--el', Math.round(el) + 'ms');
-    $('#char').innerHTML = spinCache[yaw] || (spinCache[yaw] = drawCharacter(charView(S), yaw));
+    $('#char').innerHTML = spinCache[key] || (spinCache[key] = drawCharacter(charView(S), yaw, pose));
   }
   requestAnimationFrame(spinFrame);
   function startDance() {

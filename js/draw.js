@@ -46,15 +46,44 @@ function placed(x0, yaw, inner, minK = 0.12) {
   if (k < minK) return '';
   return `<g transform="translate(${x.toFixed(2)} 0) scale(${k.toFixed(3)} 1) translate(${-x0} 0)">${inner}</g>`;
 }
-// The part of the head you see from behind: a crescent that grows into a full circle.
-function backOfHead(yaw, c) {
+// The part of the head you see from behind: a crescent that grows into a full circle,
+// plus the hair on top of the head down to the hairline, which shows from every side.
+function backOfHead(yaw, c, style) {
   const s = Math.sin(yaw * Math.PI / 180), co = Math.cos(yaw * Math.PI / 180);
   if (co > 0.985) return '';
-  const R = HEAD_R + 3, top = HEAD_CY - R - 1, bot = HEAD_CY + R + 1, rx = Math.max(0.01, R * Math.abs(co));
+  const R = HEAD_R + 3, top = HEAD_CY - R - 1, bot = HEAD_CY + R + 1;
+  // hair reaches a bit past the ear toward the face when she is turned away
+  const rx = Math.max(0.01, R * Math.abs(co) * (co < 0 ? 1.22 : 0.92));
   const left = s > 0; // face slides right, so the back shows on the left
-  const outerSweep = left ? 0 : 1;
-  const innerSweep = (co > 0) === left ? 1 : 0;
-  return `<path d="M100,${top} A${R},${R + 1} 0 0 ${outerSweep} 100,${bot} A${rx.toFixed(2)},${R + 1} 0 0 ${innerSweep} 100,${top}Z" fill="${c}"/>`;
+  const sg = left ? 1 : -1;
+  // short styles stop at the nape, so the neck shows below them
+  const yEnd = ['short', 'spiky', 'pixie', 'curly'].includes(style) ? 110 : bot;
+  const xEnd = 100 - sg * Math.sqrt(Math.max(0, R * R - (yEnd - HEAD_CY) ** 2));
+  const xMid = 100 - sg * rx * Math.sign(co || 1);
+  const cx = (xMid - 0.125 * (xEnd + 100)) / 0.75;
+  let d = `<path d="M100,${top} A${R},${R + 1} 0 0 ${left ? 0 : 1} ${xEnd.toFixed(1)},${yEnd} C${cx.toFixed(1)},${yEnd} ${cx.toFixed(1)},${top} 100,${top}Z" fill="${c}"/>`;
+  // top-of-head hair: from the hairline above the forehead, curving back to behind the ear
+  const hy = 57, xs = 100 + sg * Math.sqrt(R * R - (hy - HEAD_CY) ** 2);
+  const xb = 100 - sg * rx * 0.85;
+  const fade = clamp01(Math.abs(s) * 3);
+  d += `<path d="M${xs.toFixed(1)},${hy} A${R},${R + 1} 0 0 ${left ? 0 : 1} 100,${top} L${(100 - sg * R * 0.6).toFixed(1)},${top + 4} L${xb.toFixed(1)},${HEAD_CY - 8} Q${((xs + xb) / 2).toFixed(1)},${hy + 2} ${xs.toFixed(1)},${hy}Z" fill="${c}" opacity="${fade.toFixed(2)}"/>`;
+  return d;
+}
+// Strands and curls on the back of the head (seen when she faces away).
+function backStrandLines(style, c) {
+  const d = shade(c, -0.18), l = shade(c, 0.2);
+  let s = `<path d="M100,46 Q96,80 100,118" stroke="${d}" stroke-width="2" fill="none" opacity=".6"/><path d="M84,56 Q80,80 84,108 M116,56 Q120,80 116,108" stroke="${l}" stroke-width="2.4" fill="none" opacity=".55"/>`;
+  if (style === 'afro') s = arcCircles(100, 82, 38, 0, 360, 16, 10, c) + s;
+  if (style === 'curly') s = arcCircles(100, 84, 34, 0, 360, 14, 9, c);
+  return s;
+}
+function earsOnTop(st, yaw) {
+  let s = '';
+  for (const x0 of [64, 136]) {
+    const { x, k } = featureAt(x0, yaw);
+    if (k > 0.02 && k < 0.999) s += `<ellipse cx="${x.toFixed(2)}" cy="88" rx="${(7 * Math.max(0.45, k + 0.3)).toFixed(2)}" ry="7.4" fill="${st.skinColor}"/><ellipse cx="${x.toFixed(2)}" cy="88" rx="${(3 * Math.max(0.3, k)).toFixed(2)}" ry="3.6" fill="${shade(st.skinColor, -0.12)}"/>`;
+  }
+  return s;
 }
 
 // ---------- patterns scattered over a clip shape ----------
@@ -157,17 +186,7 @@ function hairFront(style, c) {
     case 'long': case 'wavy': case 'ponytail': case 'longbraid': return sweep;
     case 'bob': return `<path d="M62,90 C58,42 142,42 138,90 L136,74 Q100,64 64,74Z" fill="${c}"/>`;
     case 'bun': case 'puffs': return part;
-    case 'braids': {
-      let s = part;
-      for (const side of [-1, 1]) {
-        for (let i = 0; i < 7; i++) {
-          const x = 100 + side * (37 - i * 0.6), y = 98 + i * 14;
-          s += `<ellipse cx="${x}" cy="${y}" rx="9" ry="9" fill="${c}"/><path d="M${x - 7},${y - 2} Q${x},${y + 6} ${x + 7},${y - 2}" stroke="${d}" stroke-width="1.5" fill="none"/>`;
-        }
-        s += `<circle cx="${100 + side * 33}" cy="${196}" r="5" fill="#ec407a"/><path d="M${100 + side * 33 - 4},200 l-2,12 M${100 + side * 33 + 4},200 l2,12" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`;
-      }
-      return s;
-    }
+    case 'braids': return part + braidSide(c, -1) + braidSide(c, 1);
     case 'afro': return arcCircles(100, 82, 38, 200, 340, 9, 10, c);
     case 'curly': return arcCircles(100, 80, 34, 195, 345, 8, 9, c);
     case 'short': return `<path d="M62,84 C60,42 140,42 138,84 Q134,64 120,60 Q104,70 88,63 Q72,64 62,84Z" fill="${c}"/><rect x="62" y="78" width="6" height="16" rx="3" fill="${c}"/><rect x="132" y="78" width="6" height="16" rx="3" fill="${c}"/>`;
@@ -175,6 +194,16 @@ function hairFront(style, c) {
     case 'pixie': return `<path d="M62,86 C58,44 142,40 140,80 Q138,62 124,56 Q118,74 88,74 Q70,74 62,86Z" fill="${c}"/><path d="M120,48 Q100,58 84,64" stroke="${l}" stroke-width="3" fill="none" opacity=".7" stroke-linecap="round"/>`;
   }
   return sweep;
+}
+
+function braidSide(c, side) {
+  const d = shade(c, -0.18);
+  let s = '';
+  for (let i = 0; i < 7; i++) {
+    const x = 100 + side * (37 - i * 0.6), y = 98 + i * 14;
+    s += `<ellipse cx="${x}" cy="${y}" rx="9" ry="9" fill="${c}"/><path d="M${x - 7},${y - 2} Q${x},${y + 6} ${x + 7},${y - 2}" stroke="${d}" stroke-width="1.5" fill="none"/>`;
+  }
+  return s + `<circle cx="${100 + side * 33}" cy="${196}" r="5" fill="#ec407a"/><path d="M${100 + side * 33 - 4},200 l-2,12 M${100 + side * 33 + 4},200 l2,12" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`;
 }
 
 // What the head looks like from behind, shown in the middle of a spin.
@@ -373,65 +402,143 @@ function face(st, yaw = 0) {
   return s + f;
 }
 
+// The back of an outfit's top, drawn over the front when she faces away.
+function torsoBack(o) {
+  const top = o.top || o.main, trim = o.trim;
+  switch (o.type) {
+    case 'gown': case 'dress': case 'mermaid':
+      return `<path d="M80,136 Q100,130 120,136 L114,196 Q100,200 86,196Z" fill="${top}"/><path d="M100,138 V194" stroke="${shade(top, -0.15)}" stroke-width="1.5"/><path d="M85,189 Q100,194 115,189 L115,198 Q100,203 85,198Z" fill="${trim}"/><path d="M95,192 L88,210 L94,208Z M105,192 L112,210 L106,208Z" fill="${trim}"/>`;
+    case 'tunic':
+      return `<path d="M79,133 Q100,128 121,133 L124,230 Q100,238 76,230Z" fill="${o.main}"/><rect x="77" y="194" width="46" height="9" fill="#5d4037"/><path d="M76,230 Q100,238 124,230" stroke="${trim}" stroke-width="4" fill="none"/>`;
+    case 'coat':
+      return `<path d="M84,196 L72,280 L96,272 L100,214 L104,272 L128,280 L116,196Z" fill="${shade(o.main, -0.12)}"/><path d="M79,133 Q100,128 121,133 L124,226 Q100,232 76,226Z" fill="${o.main}"/><path d="M100,200 V228" stroke="${shade(o.main, -0.25)}" stroke-width="2"/><circle cx="94" cy="206" r="2.6" fill="${trim}"/><circle cx="106" cy="206" r="2.6" fill="${trim}"/>`;
+    case 'explorer':
+      return `<path d="M79,133 Q100,128 121,133 L122,222 Q100,228 78,222Z" fill="${o.main}"/><rect x="78" y="200" width="44" height="8" fill="${trim}"/>`;
+    case 'pajamas':
+      return `<path d="M79,133 Q100,128 121,133 L123,220 Q100,226 77,220Z" fill="${o.main}"/>`;
+  }
+  return '';
+}
+
+// How each hairstyle's long part behaves in a turn: how far it sits behind her, and how much volume it keeps side-on.
+const HAIR_SHEET = { long: [16, 0.62], wavy: [16, 0.66], longbraid: [16, 0.62], ponytail: [14, 0.7], bob: [10, 0.74],
+  braids: [6, 0.85], bun: [4, 0.92], puffs: [4, 0.8], afro: [2, 0.97], curly: [2, 0.95], short: [3, 0.92], spiky: [3, 0.92], pixie: [3, 0.92] };
+// Styles whose front part is a fringe on the face side; the rest cover the head all round.
+const FRINGE_STYLES = ['long', 'wavy', 'ponytail', 'longbraid', 'bob', 'bun', 'puffs', 'braids'];
+// Hats that sit only on the front of the head, versus ones that go all round it.
+const FRONT_HATS = ['tiara', 'snow', 'bow', 'shell', 'star'];
+
+// Arm outward angle (degrees from hanging down, in her own body) seen from a turned camera.
+// Returns the screen rotation for the arm drawing, and how long it looks.
+function armView(side, alpha, rad) {
+  const REST = 7.5, a = (alpha + REST) * Math.PI / 180;
+  const h = Math.sin(a), v = Math.cos(a);
+  const across = h * Math.cos(rad);              // sideways on screen
+  const beta = Math.atan2(across, v) * 180 / Math.PI;
+  const len = Math.max(0.55, Math.sqrt(across * across + v * v));
+  const rot = side === 'L' ? beta - REST : -beta + REST;
+  const depth = (side === 'L' ? 1 : -1) * Math.sin(rad) * h; // hand toward (+) or away from (-) you
+  return { rot, len, depth };
+}
+
 // st: { skinColor, hair, hairColor, eyes, lashes, outfit, hat, shoes, item, cape }
-// yaw turns her around (0 = facing you, 180 = back). Her overall width stays the same.
-function drawCharacter(st, yaw = 0) {
+// yaw turns her around (0 = facing you, 180 = back). pose = { armL, armR } outward angles while turning.
+function drawCharacter(st, yaw = 0, pose = null) {
   yaw = ((yaw % 360) + 360) % 360;
   const rad = yaw * Math.PI / 180, sn = Math.sin(rad), cs = Math.cos(rad);
-  SPIN_SHIFT = yaw * 0.35;
+  const turning = yaw !== 0 || pose;
   const o = byId(OUTFITS, st.outfit);
   const sh = byId(SHOES, st.shoes);
-  const sk = st.skinColor;
+  const sk = st.skinColor, hc = st.hairColor;
+  SPIN_SHIFT = yaw * 0.35;
   const P = outfitParts(o, sk);
   SPIN_SHIFT = 0;
   const legCol = P.legCol;
-  // body is a cylinder: shoulders and hips swing around the middle
   const bodyX = (x0, r) => { const a = Math.asin((x0 - 100) / r) + rad; return { x: 100 + r * Math.sin(a), z: Math.cos(a) }; };
+  const mirror = (px, x0) => cs < 0 ? `translate(${px.toFixed(2)} 0) scale(-1 1) translate(${-x0} 0)` : `translate(${(px - x0).toFixed(2)} 0)`;
   const leg = (side) => {
     const x0 = side === 'L' ? 92 : 108, p = bodyX(x0, 9);
     const dir = (Math.abs(sn) > 0.45 ? Math.sign(sn) : (side === 'L' ? -1 : 1)) * (cs < 0 ? -1 : 1);
     let pants = `<rect x="${x0 - 7.5}" y="198" width="15" height="${o.pants ? 120 : 124}" rx="7" fill="${legCol}"/>`;
     if (o.pants) pants += `<rect x="${x0 - 8.5}" y="${306}" width="17" height="6" rx="3" fill="${shade(legCol, -0.12)}"/>`;
     if (o.type === 'pajamas') pants += patternFill(o.pattern, `M${x0 - 7.5},198 h15 v120 h-15Z`, P.colors, [x0 - 8, 196, x0 + 8, 320]);
-    const t = cs < 0 ? `translate(${p.x.toFixed(2)} 0) scale(-1 1) translate(${-x0} 0)` : `translate(${(p.x - x0).toFixed(2)} 0)`;
-    return { z: p.z, svg: `<g transform="${t}"><g class="p-leg${side}">${pants}${shoe(sh, x0, 320, dir, sk)}</g></g>` };
+    return { z: p.z, svg: `<g transform="${mirror(p.x, x0)}"><g class="p-leg${side}">${pants}${shoe(sh, x0, 320, dir, sk)}</g></g>` };
   };
   const armSvg = (side) => {
     const x0 = side === 'L' ? 80 : 120, p = bodyX(x0, 20.5);
-    // seen from behind, each arm is a mirror image, so "raise outward" still points away from her body
-    const t = cs < 0 ? `translate(${p.x.toFixed(2)} 0) scale(-1 1) translate(${-x0} 0)` : `translate(${(p.x - x0).toFixed(2)} 0)`;
-    return { z: p.z, svg: `<g transform="${t}">${arm(side, o, sk, side === 'R' ? st.item : undefined)}</g>` };
+    const drawn = arm(side, o, sk, side === 'R' ? st.item : undefined);
+    if (!turning) return { z: 0, svg: drawn };
+    const alpha = pose ? (side === 'L' ? pose.armL : pose.armR) : 0;
+    const v = armView(side, alpha, rad);
+    const t = `translate(${(p.x - x0).toFixed(2)} 0) rotate(${v.rot.toFixed(1)} ${x0} 140) translate(${x0} 140) scale(1 ${v.len.toFixed(3)}) translate(${-x0} -140)`;
+    return { z: p.z + v.depth * 0.6, svg: `<g transform="${t}">${drawn}</g>` };
   };
   const legs = [leg('L'), leg('R')].sort((a, b) => a.z - b.z).map(l => l.svg).join('');
   const arms = [armSvg('L'), armSvg('R')];
-  const behind = arms.filter(a => a.z < -0.05).map(a => a.svg).join('');
-  const front = arms.filter(a => a.z >= -0.05).map(a => a.svg).join('');
+  const armsBehind = arms.filter(a => a.z < -0.05).sort((a, b) => a.z - b.z).map(a => a.svg).join('');
+  // an arm swung toward you passes in front of her head
+  const armsFront = arms.filter(a => a.z >= -0.05 && !(turning && a.z > 0.3 && cs < 0)).sort((a, b) => a.z - b.z).map(a => a.svg).join('');
+  const armsNearest = arms.filter(a => turning && a.z > 0.3 && cs < 0).sort((a, b) => a.z - b.z).map(a => a.svg).join('');
+
+  // torso: a little narrower side-on, and the back of the outfit when she faces away
   const w = (0.74 + 0.26 * Math.abs(cs)).toFixed(3);
-  const torsoFront = cs > -0.1 ? P.torso : `<g opacity="1">${P.torso}</g>`;
   const torso = `<g transform="translate(100 0) scale(${w} 1) translate(-100 0)">
     <rect x="93.5" y="108" width="13" height="26" rx="5" fill="${sk}"/><path d="M93.5,116 Q100,121 106.5,116" stroke="${shade(sk, -0.12)}" stroke-width="3" fill="none"/>
-    ${torsoFront}${cs > 0 ? capeCollar(st.cape) : ''}</g>`;
-  const hTop = HAIR_TOP[st.hair] || 0;
-  const backness = clamp01((-cs + 0.05) / 0.4);   // 0 facing you, 1 showing her back
-  const frontHair = clamp01((cs + 0.35) / 0.55);
-  const hairShift = (sn * 10).toFixed(2);
+    ${P.torso}${cs < -0.15 ? torsoBack(o) : ''}${cs > 0.15 ? capeCollar(st.cape) : ''}</g>`;
+
+  // long hair hangs behind her back and swings round with her
+  const [hShift, hMin] = HAIR_SHEET[st.hair] || [10, 0.8];
+  const kh = 1 - (1 - hMin) * Math.abs(sn);
+  const sheetT = `translate(${(-sn * hShift).toFixed(2)} 0) translate(100 0) scale(${kh.toFixed(3)} 1) translate(-100 0)`;
+  const sheet = hairBack(st.hair, hc);
+  let sheetFront = '';
+  if (turning && cs < 0.35 && Math.abs(sn) > 0.02 || cs < -0.9) {
+    const id = 'hs' + (++UID);
+    const edge = 100 - Math.sign(sn || 1) * 60 * cs;
+    const clip = sn >= 0 ? `<rect x="-60" y="-60" width="${(edge + 60).toFixed(1)}" height="480"/>` : `<rect x="${edge.toFixed(1)}" y="-60" width="400" height="480"/>`;
+    sheetFront = `<clipPath id="${id}">${clip}</clipPath><g clip-path="url(#${id})"><g class="p-head"><g transform="${sheetT}">${sheet}</g></g></g>`;
+  }
+
+  // cape hangs from the shoulders on her back
+  const capeT = `translate(${(-sn * 12).toFixed(2)} 0) translate(100 0) scale(${(0.72 + 0.28 * Math.abs(cs)).toFixed(3)} 1) translate(-100 0)`;
+  const capeSvg = turning ? `<g transform="${capeT}">${cape(st.cape)}</g>` : cape(st.cape);
   const capeInFront = cs < -0.25;
+
+  // head: face slides round the head; fringe squeezes toward the far edge; the back of the head fills in
+  const fringeK = (1 + cs) / 2, anchor = sn >= 0 ? 136 : 64;
+  const fringeT = `translate(${anchor} 0) scale(${fringeK.toFixed(3)} 1) translate(${-anchor} 0)`;
+  let front;
+  if (!turning) front = hairFront(st.hair, hc);
+  else if (FRINGE_STYLES.includes(st.hair)) {
+    const base = st.hair === 'braids' ? hairFront('bun', hc) : hairFront(st.hair, hc);
+    front = fringeK > 0.01 ? `<g transform="${fringeT}">${base}</g>` : '';
+    if (st.hair === 'braids') for (const side of [-1, 1]) {
+      const f = featureAt(100 + side * 31, yaw); // braids hang at the front of each shoulder
+      if (f.k > -0.3) front += `<g transform="translate(${(f.x - (100 + side * 31)).toFixed(2)} 0)">${braidSide(hc, side)}</g>`;
+    }
+  } else front = hairFront(st.hair, hc);
+  const backStrands = cs < -0.4 ? `<g opacity="${clamp01((-cs - 0.4) / 0.4).toFixed(2)}">${backStrandLines(st.hair, hc)}</g>` : '';
+  const hTop = HAIR_TOP[st.hair] || 0;
+  const frontHat = FRONT_HATS.includes(st.hat);
+  const hatSvg = !turning ? hat(st.hat, hTop) : frontHat ? (fringeK > 0.02 ? `<g transform="${fringeT}">${hat(st.hat, hTop)}</g>` : '') : `<g transform="translate(${(sn * 3).toFixed(2)} 0)">${hat(st.hat, hTop)}</g>`;
+  const headBack = turning ? backOfHead(yaw, hc, st.hair) : '';
+  const headParts = FRINGE_STYLES.includes(st.hair) || !turning
+    ? `${face(st, yaw)}${headBack}${turning ? earsOnTop(st, yaw) : ''}${front}${backStrands}`
+    : `${face(st, yaw)}${headBack}${turning ? earsOnTop(st, yaw) : ''}${backStrands}${front}`;
+
   return `
   <g class="p-all"><g class="p-body">
-    ${capeInFront ? '' : cape(st.cape)}
-    <g class="p-head">${hairBack(st.hair, st.hairColor)}</g>
-    ${behind}
+    ${capeInFront ? '' : capeSvg}
+    <g class="p-head">${turning ? `<g transform="${sheetT}">${sheet}</g>` : sheet}</g>
+    ${armsBehind}
     ${legs}
     <g class="p-skirt">${P.skirt}</g>
     ${torso}
-    ${backness > 0 ? `<g class="p-head" opacity="${backness.toFixed(2)}">${hairBack(st.hair, st.hairColor)}</g>` : ''}
-    ${capeInFront ? cape(st.cape) : ''}
-    ${front}
-    <g class="p-head">${face(st, yaw)}
-      ${frontHair > 0 ? `<g opacity="${frontHair.toFixed(2)}" transform="translate(${hairShift} 0)">${hairFront(st.hair, st.hairColor)}</g>` : ''}
-      ${backOfHead(yaw, st.hairColor)}
-      ${backness > 0.02 ? `<g opacity="${backness.toFixed(2)}">${hairBackView(st.hair, st.hairColor).replace(hairBack(st.hair, st.hairColor), '')}</g>` : ''}
-      <g transform="translate(${(sn * 6).toFixed(2)} 0)">${hat(st.hat, hTop)}</g></g>
+    ${sheetFront}
+    ${capeInFront ? capeSvg : ''}
+    ${armsFront}
+    <g class="p-head">${headParts}${hatSvg}</g>
+    ${armsNearest}
   </g></g>`;
 }
 
