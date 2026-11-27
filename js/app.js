@@ -288,7 +288,7 @@
     try {
       const src = await snapPhoto();
       await Photos.add({ id: Date.now(), src, name: nameOf(S.friend) });
-      toast('📸 Saved in your Photos!');
+      toast('📸 Saved to your gallery!');
       if (S.tab === 'photos') renderItems(true);
     } catch (e) { toast('Oops, that photo didn\'t work'); }
     snapping = false;
