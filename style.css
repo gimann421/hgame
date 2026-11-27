@@ -324,3 +324,20 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 @keyframes shimmyR { 0%,100% { transform: rotate(-130deg); } 50% { transform: rotate(-145deg); } }
 
 @media (prefers-reduced-motion: reduce) { .note { display: none; } }
+
+/* Clothing colors: plain swatches, an "original colors" swatch, and sparkly ones that glitter */
+.swatch.oc { background: var(--c, #fff); position: relative; overflow: hidden; font-size: 22px; font-weight: 900; color: var(--accent); }
+.swatch.oc.orig { background: conic-gradient(#f48fb1, #ffd54f, #81c784, #64b5f6, #b388ff, #f48fb1); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.swatch.oc.glitter { background: radial-gradient(circle at 30% 30%, #fff 0 1.5px, transparent 2.5px), linear-gradient(135deg, #fff, var(--c) 45%, var(--c2)); }
+.swatch.oc.glitter { background:
+    radial-gradient(circle at 30% 30%, #fff 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 70% 60%, #fff 0 1.2px, transparent 2px),
+    radial-gradient(circle at 45% 78%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 25%, #fff 0 1px, transparent 2px),
+    linear-gradient(135deg, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 45%, var(--c2)); }
+.swatch.oc.glitter::after { content: "✦"; position: absolute; right: 5px; top: 1px; font-size: 14px; color: #fff; text-shadow: 0 0 4px #fff; animation: twinkle 1.6s ease-in-out infinite; }
+/* Twinkling stars in sparkly clothes */
+.glint { transform-box: fill-box; transform-origin: center; animation: twinkle 1.8s ease-in-out infinite; }
+.glint.g1 { animation-delay: -.6s; } .glint.g2 { animation-delay: -1.2s; }
+@keyframes twinkle { 0%, 100% { opacity: .15; transform: scale(.5); } 50% { opacity: 1; transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .glint, .swatch.oc.glitter::after { animation: none; } }

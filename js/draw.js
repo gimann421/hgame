@@ -98,7 +98,21 @@ function patternFill(kind, clipD, colors, box) {
   const [x0, y0, x1, y1] = box;
   let s = '';
   const light = shade(colors.main, 0.6), dark = shade(colors.main, -0.25);
-  if (kind === 'rainbow') {
+  if (kind === 'glitter') {
+    // fine glitter: lots of tiny specks plus a few twinkling stars
+    const rnd = n => { const v = Math.sin(n * 127.1 + x0 * 3.3 + y0 * 7.7) * 43758.5453; return v - Math.floor(v); };
+    const shift = (SPIN_SHIFT % 40 + 40) % 40;
+    const specks = ['#ffffff', shade(colors.main, 0.75), shade(colors.main, 0.45), '#fff8e1'];
+    const area = (x1 - x0) * (y1 - y0), n = Math.min(260, Math.round(area / 55));
+    for (let i = 0; i < n; i++) {
+      const x = x0 + ((rnd(i) * (x1 - x0) + shift) % (x1 - x0)), y = y0 + rnd(i + 999) * (y1 - y0);
+      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(0.7 + rnd(i + 55) * 1.1).toFixed(2)}" fill="${specks[i % 4]}" opacity="${(0.55 + rnd(i + 77) * 0.45).toFixed(2)}"/>`;
+    }
+    for (let i = 0; i < Math.max(3, Math.round(n / 14)); i++) {
+      const x = x0 + ((rnd(i + 333) * (x1 - x0) + shift) % (x1 - x0)), y = y0 + rnd(i + 444) * (y1 - y0);
+      s += `<path class="glint g${i % 3}" d="${starPath(x, y, 4.2, 1, 4)}" fill="#fff"/>`;
+    }
+  } else if (kind === 'rainbow') {
     const bands = ['#ff8a80', '#ffd180', '#ffff8d', '#b9f6ca', '#80d8ff', '#b388ff'];
     const h = (y1 - y0) / bands.length;
     bands.forEach((c, i) => { s += `<rect x="${x0}" y="${y0 + i * h}" width="${x1 - x0}" height="${h + 1}" fill="${c}"/>`; });
@@ -270,6 +284,22 @@ function item(id, x, y) {
     case 'balloon': return `<path d="M${x},${y} Q${x + 16},${y - 44} ${x + 36},${y - 82}" stroke="#757575" stroke-width="1.2" fill="none"/><path d="${heartPath(x + 36, y - 106, 16)}" fill="#ff5252"/><ellipse cx="${x + 28}" cy="${y - 110}" rx="3" ry="5" fill="#fff" opacity=".7"/>`;
     case 'teddy': return `<g transform="translate(${x} ${y - 14})"><circle cx="-9" cy="-14" r="5" fill="#a1887f"/><circle cx="9" cy="-14" r="5" fill="#a1887f"/><ellipse cx="0" cy="10" rx="12" ry="14" fill="#a1887f"/><circle cx="0" cy="-6" r="11" fill="#a1887f"/><ellipse cx="0" cy="-2" rx="5" ry="4" fill="#d7ccc8"/><circle cx="-4" cy="-8" r="1.6" fill="#3e2723"/><circle cx="4" cy="-8" r="1.6" fill="#3e2723"/><circle cx="0" cy="-3" r="1.6" fill="#3e2723"/><path d="M-5,4 L5,4" stroke="#e53935" stroke-width="3"/></g>`;
     case 'lantern': return `<path d="M${x},${y} L${x},${y + 16}" stroke="#5d4037" stroke-width="2"/><rect x="${x - 11}" y="${y + 14}" width="22" height="6" rx="2" fill="#5d4037"/><rect x="${x - 9}" y="${y + 20}" width="18" height="24" rx="4" fill="#fff59d" stroke="#5d4037" stroke-width="2"/><ellipse cx="${x}" cy="${y + 32}" rx="5" ry="7" fill="#ffb300"/><rect x="${x - 11}" y="${y + 44}" width="22" height="5" rx="2" fill="#5d4037"/>`;
+    case 'basket': {
+      // handle hangs from the hand, a woven basket heaped with berries below it
+      const t = y + 27, b = y + 53, wT = 20, wB = 15;
+      const body = `M${x - wT},${t} L${x + wT},${t} L${x + wB},${b} Q${x},${b + 4} ${x - wB},${b}Z`;
+      let weave = '';
+      for (let r = 0; r < 4; r++) {
+        const yy = t + 3 + r * 6.5, k = (yy - t) / (b - t), half = wT - (wT - wB) * k;
+        for (let c = -half + (r % 2 ? 3.5 : 0); c < half - 2; c += 7) weave += `<rect x="${(x + c).toFixed(1)}" y="${yy.toFixed(1)}" width="6" height="4.6" rx="2.2" fill="${(r + Math.round(c)) % 2 ? '#c68a4b' : '#d9a066'}" stroke="#8d5a2b" stroke-width=".7"/>`;
+      }
+      const ber = [[-13, -2, 4.2, '#c2185b'], [-6, -6, 4.4, '#3f51b5'], [2, -7, 4.6, '#e53935'], [10, -5, 4.2, '#5c6bc0'], [15, -1, 3.8, '#d81b60'], [-9, 1, 4, '#e53935'], [6, 0, 4.2, '#303f9f'], [-1, 1, 4, '#ad1457']]
+        .map(([dx, dy, r, c]) => `<circle cx="${x + dx}" cy="${t + dy}" r="${r}" fill="${c}"/><circle cx="${x + dx - r * .35}" cy="${t + dy - r * .35}" r="${r * .3}" fill="#fff" opacity=".6"/>`).join('');
+      return `<path d="M${x - 16},${t + 1} Q${x - 17},${y - 4} ${x},${y - 4} Q${x + 17},${y - 4} ${x + 16},${t + 1}" stroke="#8d5a2b" stroke-width="3.6" fill="none" stroke-linecap="round"/>`
+        + ber + `<path d="M${x + 12},${t - 8} l3,-3 l2,3 M${x - 4},${t - 11} l2,-3 l2,3" stroke="#43a047" stroke-width="1.6" fill="none" stroke-linecap="round"/>`
+        + `<path d="${body}" fill="#b87a3d" stroke="#8d5a2b" stroke-width="1.5" stroke-linejoin="round"/>${weave}`
+        + `<rect x="${x - wT - 2}" y="${t - 2}" width="${wT * 2 + 4}" height="5" rx="2.5" fill="#a5672f" stroke="#8d5a2b" stroke-width="1"/>`;
+    }
     case 'parasol': return `<path d="M${x},${y + 10} L${x},${y - 60}" stroke="#795548" stroke-width="2.5"/><path d="M${x - 42},${y - 56} Q${x},${y - 104} ${x + 42},${y - 56} Q${x + 28},${y - 64} ${x + 14},${y - 56} Q${x},${y - 64} ${x - 14},${y - 56} Q${x - 28},${y - 64} ${x - 42},${y - 56}Z" fill="#f8bbd0" stroke="#ec407a" stroke-width="2"/><path d="M${x + 4},${y + 10} q0,8 -6,8" stroke="#795548" stroke-width="2.5" fill="none"/>`;
     case 'sword': return `<path d="M${x - 3},${y - 8} L${x - 3},${y - 62} L${x},${y - 70} L${x + 3},${y - 62} L${x + 3},${y - 8}Z" fill="#e0e0e0" stroke="#9e9e9e"/><rect x="${x - 12}" y="${y - 10}" width="24" height="5" rx="2" fill="#ffc93c"/><rect x="${x - 2.5}" y="${y - 6}" width="5" height="14" fill="#8d6e63"/><circle cx="${x}" cy="${y + 9}" r="3.5" fill="#ffc93c"/>`;
     case 'book': return `<g transform="translate(${x} ${y - 8}) rotate(-10)"><rect x="-14" y="-16" width="28" height="34" rx="3" fill="#7e57c2"/><rect x="-11" y="-13" width="22" height="28" rx="2" fill="#9575cd"/><path d="${starPath(0, 0, 7, 3)}" fill="#ffd54f"/></g>`;
@@ -301,6 +331,14 @@ function capeCollar(id) {
 // ---------- body / outfit ----------
 function outfitParts(o, skin) {
   const top = o.top || o.main, trim = o.trim;
+  // Sparkly fills: a soft diagonal shimmer instead of a flat color, then glitter on top.
+  let sheenDefs = '';
+  const sheen = c => {
+    const id = 'sh' + (++UID);
+    sheenDefs += `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${shade(c, 0.4)}"/><stop offset=".35" stop-color="${c}"/><stop offset=".55" stop-color="${shade(c, 0.28)}"/><stop offset=".8" stop-color="${c}"/><stop offset="1" stop-color="${shade(c, -0.12)}"/></linearGradient>`;
+    return `url(#${id})`;
+  };
+  const MF = o.glitter ? sheen(o.main) : o.main, TF = o.glitter ? (top === o.main ? MF : sheen(top)) : top;
   const colors = { main: o.main, trim, stripe: o.type === 'explorer' ? o.main : undefined };
   const legCol = o.pants ? o.pants : (o.legs && o.legs !== 'skin' ? o.legs : skin);
   let skirt = '', torso = '', over = '';
@@ -309,33 +347,49 @@ function outfitParts(o, skin) {
   const sash = `<path d="M85,189 Q100,194 115,189 L115,198 Q100,203 85,198Z" fill="${trim}"/>`;
   if (o.type === 'gown') {
     const d = 'M85,190 C70,232 40,282 24,318 Q100,340 176,318 C160,282 130,232 115,190Z';
-    skirt = `<path d="${d}" fill="${o.main}"/>` + patternFill(o.pattern, d, colors, [20, 188, 180, 340]);
+    skirt = `<path d="${d}" fill="${MF}"/>` + patternFill(o.pattern, d, colors, [20, 188, 180, 340]);
     if (o.panel) skirt += `<path d="M92,194 Q84,262 76,330 Q100,336 124,330 Q116,262 108,194Z" fill="${o.panel}" opacity=".9"/>`;
     skirt += `<path d="M100,200 L100,330 M91,198 Q72,262 60,326 M109,198 Q128,262 140,326" stroke="${shade(o.main, -0.15)}" stroke-width="2" fill="none" opacity=".45"/>`;
     skirt += `<path d="M24,318 Q100,340 176,318" stroke="${trim}" stroke-width="7" fill="none" stroke-linecap="round"/>`;
-    torso = chest + `<path d="${bodice}" fill="${top}"/>` + patternFill(o.pattern === 'rainbow' ? 'sparkle' : 'none', bodice, colors, [78, 130, 122, 200]) + sash;
+    torso = chest + `<path d="${bodice}" fill="${TF}"/>` + patternFill(o.pattern === 'rainbow' ? 'sparkle' : 'none', bodice, colors, [78, 130, 122, 200]) + sash;
   } else if (o.type === 'dress') {
     const d = 'M86,190 Q62,226 50,262 Q100,276 150,262 Q138,226 114,190Z';
-    skirt = `<path d="${d}" fill="${o.main}"/>` + patternFill(o.pattern, d, colors, [46, 188, 154, 280]) + `<path d="M50,262 Q100,276 150,262" stroke="${trim}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
-    torso = chest + `<path d="${bodice}" fill="${top}"/>` + sash;
+    skirt = `<path d="${d}" fill="${MF}"/>` + patternFill(o.pattern, d, colors, [46, 188, 154, 280]) + `<path d="M50,262 Q100,276 150,262" stroke="${trim}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+    torso = chest + `<path d="${bodice}" fill="${TF}"/>` + sash;
   } else if (o.type === 'mermaid') {
     const d = 'M86,190 C82,236 88,272 92,296 Q70,318 52,334 Q100,346 148,334 Q130,318 108,296 C112,272 118,236 114,190Z';
-    skirt = `<path d="${d}" fill="${o.main}"/>` + patternFill('scales', d, colors, [50, 188, 150, 346]) + `<path d="M92,296 Q70,318 52,334 Q100,346 148,334 Q130,318 108,296Z" fill="${trim}" opacity=".55"/>`;
-    torso = chest + `<path d="${bodice}" fill="${top}"/>` + `<path d="M84,152 Q92,160 100,152 Q108,160 116,152" stroke="${trim}" stroke-width="3" fill="none"/>` + sash;
+    skirt = `<path d="${d}" fill="${MF}"/>` + patternFill('scales', d, colors, [50, 188, 150, 346]) + `<path d="M92,296 Q70,318 52,334 Q100,346 148,334 Q130,318 108,296Z" fill="${trim}" opacity=".55"/>`;
+    torso = chest + `<path d="${bodice}" fill="${TF}"/>` + `<path d="M84,152 Q92,160 100,152 Q108,160 116,152" stroke="${trim}" stroke-width="3" fill="none"/>` + sash;
   } else if (o.type === 'tunic') {
     const d = 'M79,133 Q100,128 121,133 L124,230 Q100,238 76,230Z';
-    torso = `<path d="${d}" fill="${o.main}"/><path d="M90,132 L100,150 L110,132" fill="${shade(o.main, 0.35)}"/><path d="M100,150 L100,230" stroke="${trim}" stroke-width="3"/><rect x="77" y="194" width="46" height="9" fill="#5d4037"/><rect x="95" y="192" width="10" height="13" rx="2" fill="${trim}"/><path d="M76,230 Q100,238 124,230" stroke="${trim}" stroke-width="4" fill="none"/>`;
+    torso = `<path d="${d}" fill="${MF}"/><path d="M90,132 L100,150 L110,132" fill="${shade(o.main, 0.35)}"/><path d="M100,150 L100,230" stroke="${trim}" stroke-width="3"/><rect x="77" y="194" width="46" height="9" fill="#5d4037"/><rect x="95" y="192" width="10" height="13" rx="2" fill="${trim}"/><path d="M76,230 Q100,238 124,230" stroke="${trim}" stroke-width="4" fill="none"/>`;
   } else if (o.type === 'coat') {
-    torso = `<path d="M84,196 L72,280 L96,272 L100,214 L104,272 L128,280 L116,196Z" fill="${shade(o.main, -0.12)}"/><path d="M79,133 Q100,128 121,133 L124,226 Q100,232 76,226Z" fill="${o.main}"/><path d="M90,132 L100,170 L110,132Z" fill="#fff"/><path d="M90,132 L96,170 L86,170Z M110,132 L104,170 L114,170Z" fill="${trim}"/>` +
+    torso = `<path d="M84,196 L72,280 L96,272 L100,214 L104,272 L128,280 L116,196Z" fill="${shade(o.main, -0.12)}"/><path d="M79,133 Q100,128 121,133 L124,226 Q100,232 76,226Z" fill="${MF}"/><path d="M90,132 L100,170 L110,132Z" fill="#fff"/><path d="M90,132 L96,170 L86,170Z M110,132 L104,170 L114,170Z" fill="${trim}"/>` +
       [178, 192, 206].map(y => `<circle cx="100" cy="${y}" r="3" fill="${trim}"/>`).join('') + `<path d="M84,138 L120,200" stroke="${shade(o.main === '#fff3e0' ? '#1e88e5' : '#1e88e5', 0)}" stroke-width="6" opacity=".9"/>`;
   } else if (o.type === 'explorer') {
     const shirt = 'M79,133 Q100,128 121,133 L122,222 Q100,228 78,222Z';
-    torso = `<path d="${shirt}" fill="${top}"/>` + patternFill(o.pattern, shirt, colors, [76, 128, 124, 230]) + `<path d="M79,133 L94,136 L92,222 L78,222Z M121,133 L106,136 L108,222 L122,222Z" fill="${o.main}"/><rect x="78" y="200" width="44" height="8" fill="${trim}"/><path d="M92,134 L100,146 L108,134" stroke="${shade(top, -0.2)}" stroke-width="2" fill="none"/>`;
+    torso = `<path d="${shirt}" fill="${TF}"/>` + patternFill(o.pattern, shirt, colors, [76, 128, 124, 230]) + `<path d="M79,133 L94,136 L92,222 L78,222Z M121,133 L106,136 L108,222 L122,222Z" fill="${MF}"/><rect x="78" y="200" width="44" height="8" fill="${trim}"/><path d="M92,134 L100,146 L108,134" stroke="${shade(top, -0.2)}" stroke-width="2" fill="none"/>`;
   } else if (o.type === 'pajamas') {
     const shirt = 'M79,133 Q100,128 121,133 L123,220 Q100,226 77,220Z';
-    torso = `<path d="${shirt}" fill="${o.main}"/>` + patternFill(o.pattern, shirt, colors, [76, 128, 124, 228]) + `<path d="M90,132 Q100,142 110,132" stroke="${trim}" stroke-width="4" fill="none"/>` + [158, 178, 198].map(y => `<circle cx="100" cy="${y}" r="2.6" fill="${trim}"/>`).join('');
+    torso = `<path d="${shirt}" fill="${MF}"/>` + patternFill(o.pattern, shirt, colors, [76, 128, 124, 228]) + `<path d="M90,132 Q100,142 110,132" stroke="${trim}" stroke-width="4" fill="none"/>` + [158, 178, 198].map(y => `<circle cx="100" cy="${y}" r="2.6" fill="${trim}"/>`).join('');
   }
   if (o.pants && o.pattern && o.type === 'pajamas') over = 'pjlegs';
+  if (o.glitter) {
+    const G = {
+      gown: ['M85,190 C70,232 40,282 24,318 Q100,340 176,318 C160,282 130,232 115,190Z', [20, 188, 180, 340], bodice],
+      dress: ['M86,190 Q62,226 50,262 Q100,276 150,262 Q138,226 114,190Z', [46, 188, 154, 280], bodice],
+      mermaid: ['M86,190 C82,236 88,272 92,296 Q70,318 52,334 Q100,346 148,334 Q130,318 108,296 C112,272 118,236 114,190Z', [50, 188, 150, 346], bodice],
+      tunic: [null, null, 'M79,133 Q100,128 121,133 L124,230 Q100,238 76,230Z'],
+      coat: [null, null, 'M79,133 Q100,128 121,133 L124,226 Q100,232 76,226Z'],
+      explorer: [null, null, 'M79,133 Q100,128 121,133 L122,222 Q100,228 78,222Z'],
+      pajamas: [null, null, 'M79,133 Q100,128 121,133 L123,220 Q100,226 77,220Z']
+    }[o.type];
+    if (G) {
+      if (G[0]) skirt = skirt + patternFill('glitter', G[0], colors, G[1]);
+      torso = torso + patternFill('glitter', G[2], colors, [76, 128, 124, 238]);
+    }
+  }
+  if (sheenDefs) skirt = `<defs>${sheenDefs}</defs>` + skirt;
   return { skirt, torso, legCol, over, colors };
 }
 
@@ -504,7 +558,10 @@ function drawCharacter(st, yaw = 0, pose = null) {
   const snow = st.kind === 'snowman';
   // Ignore hair and shoes chosen on another friend: twigs and snowball feet stay put.
   if (snow) st = { ...st, skinColor: '#f7fbff', hair: 'none', shoes: 'barefoot' };
-  const o = byId(OUTFITS, st.outfit);
+  let o = byId(OUTFITS, st.outfit);
+  const oc = st.outfitColor && OUTFIT_COLORS.find(c => c.id === st.outfitColor);
+  if (oc && oc.main) o = { ...o, main: oc.main, top: oc.top || shade(oc.main, -0.14), panel: o.panel ? shade(oc.main, 0.5) : undefined,
+    pattern: oc.pattern || (oc.glitter ? 'none' : o.pattern), glitter: !!oc.glitter };
   const sh = byId(SHOES, st.shoes);
   const sk = st.skinColor, hc = st.hairColor;
   SPIN_SHIFT = yaw * 0.35;

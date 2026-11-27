@@ -57,6 +57,33 @@ const OUTFITS = [
   { id: 'noscarf', name: 'No Scarf', type: 'scarf', main: '#f7fbff', trim: '#f7fbff', sleeve: 'none', pattern: 'none', forKind: 'snowman' }
 ];
 
+// Colors for clothes (Outfits tab). "Original" keeps each outfit's own colors.
+// Sparkly ones shimmer and glitter.
+const OUTFIT_COLORS = [
+  { id: 'orig', name: 'Original' },
+  { id: 'red', name: 'Red', main: '#e53935' },
+  { id: 'pink', name: 'Pink', main: '#f48fb1' },
+  { id: 'orange', name: 'Orange', main: '#ff9800' },
+  { id: 'yellow', name: 'Yellow', main: '#ffd54f' },
+  { id: 'green', name: 'Green', main: '#66bb6a' },
+  { id: 'teal', name: 'Teal', main: '#26a69a' },
+  { id: 'blue', name: 'Blue', main: '#42a5f5' },
+  { id: 'purple', name: 'Purple', main: '#9575cd' },
+  { id: 'white', name: 'White', main: '#f5f5f5', top: '#e0e0e0' },
+  { id: 'black', name: 'Black', main: '#37474f' },
+  { id: 'sparkle', name: 'Silver Sparkle', main: '#cfd8e3', top: '#b8c4d4', glitter: true },
+  { id: 'pinksparkle', name: 'Pink Sparkle', main: '#f48fb1', top: '#ec6fa0', glitter: true },
+  { id: 'hotpinksparkle', name: 'Hot Pink Sparkle', main: '#ec407a', top: '#d81b60', glitter: true },
+  { id: 'purplesparkle', name: 'Purple Sparkle', main: '#ab7ae0', top: '#8e5cd0', glitter: true },
+  { id: 'lilacsparkle', name: 'Lilac Sparkle', main: '#d1b3f0', top: '#bb94e8', glitter: true },
+  { id: 'goldsparkle', name: 'Gold Sparkle', main: '#ffcf4a', top: '#f5b400', glitter: true },
+  { id: 'bluesparkle', name: 'Blue Sparkle', main: '#64b5f6', top: '#3d9be9', glitter: true },
+  { id: 'aquasparkle', name: 'Aqua Sparkle', main: '#4dd0e1', top: '#26c6da', glitter: true },
+  { id: 'greensparkle', name: 'Green Sparkle', main: '#69d48a', top: '#43c26c', glitter: true },
+  { id: 'redsparkle', name: 'Ruby Sparkle', main: '#e5394f', top: '#c62840', glitter: true },
+  { id: 'rainbowsparkle', name: 'Rainbow Sparkle', main: '#ff8ac4', top: '#b388ff', pattern: 'rainbow', glitter: true }
+];
+
 // Flurry draws each shared outfit as a scarf (body color plus stitch and fringe).
 // These labels are what the Outfits tab shows for him. Other friends keep `name`.
 const SNOW_OUTFIT_NAMES = {
@@ -132,6 +159,7 @@ const ITEMS = [
   { id: 'balloon', name: 'Balloon' },
   { id: 'teddy', name: 'Teddy Bear' },
   { id: 'lantern', name: 'Lantern' },
+  { id: 'basket', name: 'Berry Basket' },
   { id: 'parasol', name: 'Parasol' },
   { id: 'sword', name: 'Toy Sword' },
   { id: 'book', name: 'Story Book' },
