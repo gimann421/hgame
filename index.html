@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dance Party">
+<meta name="theme-color" content="#7c4dff">
+<title>Royal Dance Party</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <section id="stage" class="stage">
+    <div id="bg"><svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMax slice"></svg></div>
+    <div id="lights"><i></i><i></i><i></i></div>
+    <div id="fx"></div>
+    <div id="hero"><svg id="char" viewBox="-10 -30 220 375"></svg></div>
+    <div id="petwrap"><svg id="pet" viewBox="0 0 120 120"></svg></div>
+    <div id="nameTag"></div>
+    <button id="surprise" aria-label="Surprise outfit">🎲</button>
+    <button id="danceBtn"><span>💃</span> Dance!</button>
+  </section>
+  <section id="panel">
+    <nav id="tabs"></nav>
+    <div id="items" class="items"></div>
+  </section>
+</div>
+<script src="js/data.js"></script>
+<script src="js/draw.js"></script>
+<script src="js/music.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
