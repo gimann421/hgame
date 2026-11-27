@@ -274,6 +274,8 @@ function hat(id, off) {
 }
 
 // ---------- items held in the right hand ----------
+// Items with no handle are drawn in front of the hand instead of behind the fingers
+const FRONT_ITEMS = new Set(['apple', 'cupcake', 'teddy', 'book']);
 function item(id, x, y) {
   switch (id) {
     case 'wand': return `<path d="M${x},${y + 8} L${x + 2},${y - 40}" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/><path d="${starPath(x + 2, y - 48, 12, 5)}" fill="#fff176" stroke="#ffb300" stroke-width="2"/><circle cx="${x + 14}" cy="${y - 60}" r="2" fill="#fff"/><circle cx="${x - 10}" cy="${y - 58}" r="1.6" fill="#fff"/>`;
@@ -409,9 +411,11 @@ function hand(hx, hy, skin, inward, holding, held) {
   }
   // closed hand around the handle: item behind, fingers curled over the front, thumb on top
   const fist = 'M-5.4,-7 C-6.6,-2.5 -6.9,4.5 -5.9,8.2 C-5,10.9 4.8,11.2 5.8,8.4 C6.9,4.6 6.6,-2.6 5.4,-7';
-  return `${held}<g ${T}><path d="${fist}Z" fill="${skin}"/><path d="M-6.35,-2.5 C-6.9,2 -6.8,5.5 -5.9,8.2 C-5,10.9 4.8,11.2 5.8,8.4 C6.9,4.6 6.7,0 6.3,-2.5" fill="none" stroke="${line}" stroke-width=".75" stroke-linecap="round"/>` +
+  // things without a handle (apple, cupcake, teddy, book) sit in front of the hand, resting in it
+  const front = held && held.front;
+  return `${front ? '' : held}<g ${T}><path d="${fist}Z" fill="${skin}"/><path d="M-6.35,-2.5 C-6.9,2 -6.8,5.5 -5.9,8.2 C-5,10.9 4.8,11.2 5.8,8.4 C6.9,4.6 6.7,0 6.3,-2.5" fill="none" stroke="${line}" stroke-width=".75" stroke-linecap="round"/>` +
     `<path d="M-5.6,0.6 Q-2.6,1.8 0.6,0.8 M-5.7,3.6 Q-2.6,4.8 0.6,3.8 M-5.4,6.6 Q-2.6,7.8 0.4,6.8" stroke="${crease}" stroke-width=".65" stroke-linecap="round" fill="none"/>` +
-    `<path d="M5.9,-3.2 C3.6,-4.8 -0.6,-3.6 -1.8,-1.4 C-1,0.2 3.2,0 6.2,0.6Z" fill="${skin}" stroke="${line}" stroke-width=".7" stroke-linejoin="round"/></g>`;
+    `<path d="M5.9,-3.2 C3.6,-4.8 -0.6,-3.6 -1.8,-1.4 C-1,0.2 3.2,0 6.2,0.6Z" fill="${skin}" stroke="${line}" stroke-width=".7" stroke-linejoin="round"/></g>${front ? held : ''}`;
 }
 
 function arm(side, o, skin, itemId) {
@@ -430,7 +434,7 @@ function arm(side, o, skin, itemId) {
     s += `<ellipse cx="${sx}" cy="${sy + 1}" rx="10" ry="7" fill="${tr}" opacity=".9"/>`;
   }
   const holding = !L && itemId && itemId !== 'none';
-  if (holding) s += hand(hx, hy, skin, L ? 1 : -1, true, item(itemId, hx, hy - 2));
+  if (holding) { const it = item(itemId, hx, hy - 2); s += hand(hx, hy, skin, L ? 1 : -1, true, FRONT_ITEMS.has(itemId) ? Object.assign(new String(it), { front: true }) : it); }
   else s += hand(hx, hy, skin, L ? 1 : -1, false, '');
   return `<g class="p-arm${side}">${s}</g>`;
 }
