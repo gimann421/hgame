@@ -348,3 +348,29 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .swatch.oc.fav { overflow: visible; }
 .swatch.oc .favstar { top: -10px; right: -10px; font-size: 18px; }
 .swatch.oc.glitter.fav::after { display: none; }
+
+/* Photo button, camera flash and the in-game photo gallery */
+#photoBtn {
+  position: absolute; top: 84px; right: 12px; z-index: 6;
+  width: 64px; height: 64px; border-radius: 50%; font-size: 32px;
+  background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.18);
+}
+#photoBtn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+@media (orientation: portrait) and (max-width: 600px) { #stage #photoBtn { top: 70px; width: 52px; height: 52px; font-size: 26px; } }
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 30; border-radius: inherit; }
+#flash.go { animation: flash .7s ease-out; }
+@keyframes flash { 0% { opacity: 0; } 8% { opacity: 1; } 100% { opacity: 0; } }
+#toast { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); z-index: 31; background: rgba(61,36,102,.92); color: #fff;
+  font-weight: 800; font-size: 18px; padding: 10px 18px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
+#toast.show { animation: toastin .3s ease-out; }
+@keyframes toastin { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.tile.photo .art { background: #2a1550; }
+.tile.photo .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photoempty { grid-column: 1 / -1; text-align: center; font-weight: 800; font-size: 20px; padding: 30px 10px; line-height: 1.5; opacity: .75; }
+#viewer { position: fixed; inset: 0; z-index: 100; background: rgba(42,21,80,.88); display: flex; align-items: center; justify-content: center; padding: 16px; }
+#viewer .vbox { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 100%; max-height: 100%; }
+#viewer img { max-width: 100%; max-height: calc(100vh - 120px); border-radius: 20px; border: 6px solid #fff; box-shadow: 0 8px 30px rgba(0,0,0,.4); }
+#viewer .vbtns { display: flex; gap: 12px; }
+#viewer .vbtns button { padding: 12px 22px; border-radius: 999px; font-weight: 900; font-size: 20px; background: #fff; color: var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.2); }
+#viewer #viewDel.sure { background: #e53935; color: #fff; }
+@media (prefers-reduced-motion: reduce) { #flash.go { animation-duration: .3s; } }

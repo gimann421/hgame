@@ -14,7 +14,8 @@
     { id: 'pet', icon: '🐱', label: 'Pets' },
     { id: 'stage', icon: '🏰', label: 'Places' },
     { id: 'dance', icon: '💃', label: 'Dances' },
-    { id: 'music', icon: '🎵', label: 'Music' }
+    { id: 'music', icon: '🎵', label: 'Music' },
+    { id: 'photos', icon: '📷', label: 'Photos' }
   ];
 
   function friendState(f) {
@@ -105,6 +106,7 @@
       case 'pet': return PETS.map(h => tile(h.id, h.name, h.id === 'none' ? '<div class="none">✖️</div>' : svg('0 0 120 120', drawPet(h.id)), S.pet === h.id, '', isFav('pet', h.id))).join('');
       case 'stage': return STAGES.map(h => tile(h.id, h.name, `<svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">${drawStage(h.id)}</svg>`, S.stage === h.id, ' wide')).join('');
       case 'dance': return DANCES.map(d => tile(d.id, d.name, `<div class="emoji">${d.emoji}</div>`, S.dance === d.id && dancing)).join('');
+      case 'photos': return '<div class="photoempty">Loading photos…</div>';
       case 'music': return TRACKS.map(t => tile(t.id, t.name, `<div class="emoji">${t.emoji}</div>`, S.track === t.id && dancing)).join('');
     }
     return '';
@@ -125,6 +127,7 @@
       const y = $('#panel').getBoundingClientRect().top + window.scrollY - pinned;
       if (window.scrollY > y) window.scrollTo(0, Math.max(0, y));
     }
+    if (S.tab === 'photos') fillPhotos();
     if (S.tab === 'item') box.querySelectorAll('.art svg').forEach(el => {
       try { const b = el.getBBox(), pad = 8, side = Math.max(b.width, b.height) + pad * 2;
         el.setAttribute('viewBox', `${b.x + b.width / 2 - side / 2} ${b.y + b.height / 2 - side / 2} ${side} ${side}`); } catch (e) {}
@@ -222,6 +225,95 @@
     }
   }
 
+  // ---------- photos ----------
+  // Photos are kept on this device only (in the browser's own storage), newest first.
+  const Photos = (() => {
+    const mem = []; let dbp = null;
+    const open = () => dbp || (dbp = new Promise((res, rej) => {
+      try {
+        const r = indexedDB.open('royal-dance-party-photos', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('photos', { keyPath: 'id' });
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      } catch (e) { rej(e); }
+    }));
+    const run = (mode, fn) => open().then(db => new Promise((res, rej) => {
+      const t = db.transaction('photos', mode), req = fn(t.objectStore('photos'));
+      t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error);
+    }));
+    return {
+      all: () => run('readonly', st => st.getAll()).then(a => (a || []).sort((x, y) => y.id - x.id)).catch(() => mem.slice().reverse()),
+      add: p => run('readwrite', st => st.put(p)).catch(() => { mem.push(p); }),
+      del: id => run('readwrite', st => st.delete(id)).catch(() => { const i = mem.findIndex(p => p.id === id); if (i >= 0) mem.splice(i, 1); }),
+      get: id => run('readonly', st => st.get(id)).catch(() => mem.find(p => p.id === id))
+    };
+  })();
+
+  // Turn one of the stage's drawings into a picture, with room around it for things
+  // that stick out of its frame (balloons, parasols, ribbons).
+  function svgPicture(el, rect, grow) {
+    const c = el.cloneNode(true), vb = (el.getAttribute('viewBox') || `0 0 ${rect.width} ${rect.height}`).split(/[ ,]+/).map(Number);
+    const [x, y, w, h] = vb, gx = w * grow, gy = h * grow;
+    if (grow) c.setAttribute('viewBox', `${x - gx} ${y - gy} ${w + gx * 2} ${h + gy * 2}`);
+    const W = rect.width * (1 + grow * 2), H = rect.height * (1 + grow * 2);
+    c.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); c.setAttribute('width', W); c.setAttribute('height', H);
+    c.removeAttribute('id'); c.removeAttribute('class');
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(c));
+    return new Promise((res, rej) => { const im = new Image(); im.onload = () => res({ im, x: rect.left - rect.width * grow, y: rect.top - rect.height * grow, w: W, h: H }); im.onerror = rej; im.src = url; });
+  }
+  function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+  async function snapPhoto() {
+    const st = $('#stage').getBoundingClientRect();
+    const rel = el => { const r = el.getBoundingClientRect(); return { left: r.left - st.left, top: r.top - st.top, width: r.width, height: r.height }; };
+    const parts = [await svgPicture($('#bg svg'), rel($('#bg')), 0), await svgPicture($('#char'), rel($('#char')), 0.4)];
+    if (S.pet && S.pet !== 'none') parts.push(await svgPicture($('#pet'), rel($('#pet')), 0.3));
+    const k = Math.min(2, 1600 / st.width), cv = document.createElement('canvas');
+    cv.width = Math.round(st.width * k); cv.height = Math.round(st.height * k);
+    const g = cv.getContext('2d'); g.scale(k, k);
+    g.fillStyle = '#f8bbd0'; g.fillRect(0, 0, st.width, st.height);
+    for (const p of parts) g.drawImage(p.im, p.x, p.y, p.w, p.h);
+    // name tag, like on the stage
+    const name = nameOf(S.friend), fs = Math.max(16, Math.min(26, st.width / 26));
+    g.font = `800 ${fs}px ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", system-ui, sans-serif`;
+    const tw = Math.min(g.measureText(name).width, st.width - 60);
+    g.fillStyle = 'rgba(255,255,255,.9)'; roundRect(g, 14, st.height - fs * 2.2 - 14, tw + fs * 1.4, fs * 2.2, fs * 1.1); g.fill();
+    g.fillStyle = '#3d2466'; g.textBaseline = 'middle'; g.fillText(name, 14 + fs * 0.7, st.height - fs * 1.1 - 14, tw);
+    return cv.toDataURL('image/jpeg', 0.86);
+  }
+  let snapping = false;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 2200); }
+  $('#photoBtn').addEventListener('click', async () => {
+    if (snapping) return; snapping = true;
+    Music.shutter();
+    const f = $('#flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+    try {
+      const src = await snapPhoto();
+      await Photos.add({ id: Date.now(), src, name: nameOf(S.friend) });
+      toast('📸 Saved to your gallery!');
+      if (S.tab === 'photos') renderItems(true);
+    } catch (e) { toast('Oops, that photo didn\'t work'); }
+    snapping = false;
+  });
+  async function fillPhotos() {
+    const list = await Photos.all();
+    if (S.tab !== 'photos') return;
+    $('#items').innerHTML = list.length
+      ? list.map(p => `<button class="tile photo" data-photo="${p.id}"><div class="art"><img src="${p.src}" alt=""></div><span>${esc(p.name || '')}</span></button>`).join('')
+      : '<div class="photoempty">No photos yet.<br>Tap 📸 on the stage to take one!</div>';
+  }
+  let viewing = null;
+  async function openPhoto(id) {
+    const p = await Photos.get(id); if (!p) return;
+    viewing = id; $('#viewImg').src = p.src; $('#viewDel').textContent = '🗑️ Delete'; $('#viewDel').classList.remove('sure'); $('#viewer').hidden = false;
+  }
+  const closePhoto = () => { $('#viewer').hidden = true; $('#viewImg').removeAttribute('src'); viewing = null; };
+  $('#viewClose').addEventListener('click', closePhoto);
+  $('#viewer').addEventListener('click', e => { if (e.target.id === 'viewer') closePhoto(); });
+  $('#viewDel').addEventListener('click', async () => {
+    const b = $('#viewDel');
+    if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = 'Tap again to delete'; return; }
+    await Photos.del(viewing); closePhoto(); if (S.tab === 'photos') renderItems(true);
+  });
+
   // ---------- input ----------
   let unlocked = false;
   document.addEventListener('pointerdown', () => { if (!unlocked) { Music.unlock(); unlocked = true; } }, { capture: true });
@@ -233,6 +325,8 @@
     S.tab = b.dataset.tab; renderTabs(); renderItems(); save();
   });
   $('#items').addEventListener('click', e => {
+    const ph = e.target.closest('[data-photo]');
+    if (ph) { openPhoto(+ph.dataset.photo); return; }
     const sw = e.target.closest('.swatch');
     if (sw && sw.dataset.oc) { S.outfitColor = sw.dataset.oc; Music.chime(); renderAll(true); return; }
     if (sw) { S.hairColor = sw.dataset.color; renderAll(true); return; }

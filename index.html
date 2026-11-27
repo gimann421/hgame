@@ -29,8 +29,12 @@
       <div class="rbtns"><button type="button" id="nameReset">Original</button><button type="submit" id="nameSave">Save ✓</button></div>
     </form>
     <button id="surprise" aria-label="Surprise outfit">🎲</button>
+    <button id="photoBtn" aria-label="Take a photo">📸</button>
+    <div id="flash"></div>
+    <div id="toast" hidden></div>
     <button id="danceBtn"><span>💃</span> Dance!</button>
   </section>
+  <div id="viewer" hidden><div class="vbox"><img id="viewImg" alt="Photo"><div class="vbtns"><button id="viewDel">🗑️ Delete</button><button id="viewClose">✖ Close</button></div></div></div>
   <section id="panel">
     <div id="tabsWrap"><nav id="tabs"></nav></div>
     <div id="items" class="items"></div>
