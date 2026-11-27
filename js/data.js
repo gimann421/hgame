@@ -59,6 +59,22 @@ const OUTFITS = [
 
 // Colors for clothes (Outfits tab). "Original" keeps each outfit's own colors.
 // Sparkly ones shimmer and glitter.
+// Things that suit each fairy-tale friend. They get a star in the corner of their
+// boxes while that friend is chosen. Each friend's own starting look is added too.
+const FAVORITES = {
+  goldie: { outfit: ['meadow', 'lavender'], color: ['purple', 'purplesparkle', 'lilacsparkle'], hat: ['flowers'], item: ['lantern', 'basket'], pet: ['chameleon'] },
+  astrid: { outfit: ['frost'], color: ['blue', 'white', 'sparkle', 'bluesparkle', 'aquasparkle'], hat: ['snow'], shoes: ['crystal', 'snowboots'], item: ['wand'], cape: ['snowcape'], pet: ['penguin', 'reindeer'] },
+  ella: { outfit: ['starball'], color: ['blue', 'bluesparkle', 'sparkle'], hat: ['tiara'], shoes: ['crystal'], item: ['wand'], cape: ['sky'], pet: ['mouse'] },
+  briar: { outfit: ['rose'], color: ['pink', 'pinksparkle', 'hotpinksparkle'], hat: ['crown', 'tiara'], shoes: ['pink'], item: ['bouquet', 'basket'], cape: ['rosecape'], pet: ['owl'] },
+  marina: { outfit: ['ocean', 'sunset'], color: ['teal', 'aquasparkle', 'greensparkle'], hat: ['shell'], shoes: ['barefoot', 'sandals'], item: ['mirror'] },
+  blanca: { outfit: ['ruby'], color: ['red', 'yellow', 'redsparkle'], hat: ['bow'], item: ['apple', 'basket'], pet: ['bunny'] },
+  bella: { outfit: ['garden', 'sun'], color: ['yellow', 'goldsparkle'], item: ['book', 'bouquet'], pet: ['mouse'] },
+  finn: { outfit: ['archer'], color: ['green', 'greensparkle'], hat: ['beret'], cape: ['leaf'], pet: ['frog'] },
+  jack: { outfit: ['explorer'], hat: ['beret'], item: ['lantern'] },
+  flurry: { color: ['white', 'sparkle', 'bluesparkle'], hat: ['beanie', 'snow'], pet: ['reindeer', 'penguin'] },
+  bjorn: { outfit: ['mountain'], hat: ['beanie'], shoes: ['boots', 'snowboots'], item: ['iceaxe', 'lantern'], pet: ['reindeer'] }
+};
+
 const OUTFIT_COLORS = [
   { id: 'orig', name: 'Original' },
   { id: 'red', name: 'Red', main: '#e53935' },
@@ -160,6 +176,7 @@ const ITEMS = [
   { id: 'teddy', name: 'Teddy Bear' },
   { id: 'lantern', name: 'Lantern' },
   { id: 'basket', name: 'Berry Basket' },
+  { id: 'apple', name: 'Red Apple' },
   { id: 'parasol', name: 'Parasol' },
   { id: 'sword', name: 'Toy Sword' },
   { id: 'book', name: 'Story Book' },
