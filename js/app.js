@@ -18,7 +18,7 @@
   ];
 
   function friendState(f) {
-    return { friend: f.id, kind: f.kind, skin: f.skin, hair: f.hair, hairColor: f.hairColor, eyes: f.eyes, lashes: f.lashes, ...f.look };
+    return { friend: f.id, kind: f.kind, skin: f.skin, hair: f.hair, hairColor: f.hairColor, eyes: f.eyes, lashes: f.lashes, outfitColor: 'orig', ...f.look };
   }
   let S = { ...friendState(FRIENDS[0]), stage: 'ballroom', dance: 'twirl', track: 'pop', tab: 'friends', names: {} };
   try { const saved = JSON.parse(localStorage.getItem(SAVE_KEY)); if (saved && saved.friend) S = { ...S, ...saved }; } catch (e) {}
@@ -37,6 +37,7 @@
     if (!ok(TRACKS, S.track)) S.track = 'pop';
     if (!ok(TABS, S.tab)) S.tab = 'friends';
     if (!SKIN[S.skin]) S.skin = base.skin;
+    if (!OUTFIT_COLORS.some(c => c.id === S.outfitColor)) S.outfitColor = 'orig';
     if (typeof S.hairColor !== 'string' || !/^#[0-9a-f]{3,8}$/i.test(S.hairColor)) S.hairColor = base.hairColor;
     for (const id of Object.keys(S.names)) if (!ok(FRIENDS, id) || typeof S.names[id] !== 'string') delete S.names[id];
   }
@@ -73,21 +74,35 @@
 
   const svg = (vb, inner) => `<svg viewBox="${vb}" aria-hidden="true">${inner}</svg>`;
   const FULL = '-10 -30 220 375', BODY = '-6 36 212 300', HEAD = '28 -6 144 144', FEET = '62 272 76 64';
-  const tile = (id, label, art, sel, extra = '') => `<button class="tile${sel ? ' sel' : ''}${extra}" data-id="${id}"><div class="art">${art}</div><span>${label}</span></button>`;
+  // Things that suit the chosen friend get a star (see FAVORITES)
+  const favs = () => {
+    const f = FAVORITES[S.friend]; if (!f) return null;
+    const fr = byId(FRIENDS, S.friend), own = { ...fr.look, hair: fr.hair };
+    if (fr.kind === 'snowman') delete own.outfit;
+    const out = {};
+    for (const k of ['outfit', 'color', 'hair', 'hat', 'shoes', 'item', 'cape', 'pet']) out[k] = new Set([...(f[k] || []), own[k]].filter(v => v && v !== 'none'));
+    return out;
+  };
+  let FAV = null;
+  const STAR = '<i class="favstar" aria-label="favorite">⭐</i>';
+  const tile = (id, label, art, sel, extra = '', fav = false) => `<button class="tile${sel ? ' sel' : ''}${fav ? ' fav' : ''}${extra}" data-id="${id}">${fav ? STAR : ''}<div class="art">${art}</div><span>${label}</span></button>`;
+  const isFav = (k, id) => !!(FAV && FAV[k] && FAV[k].has(id));
 
   function tilesFor(tab) {
     const cv = charView(S);
+    FAV = favs();
     switch (tab) {
       case 'friends': return FRIENDS.map(f => tile(f.id, S.names[f.id] ? esc(S.names[f.id]) : f.name.replace(/^(Princess|Prince|Snow Queen) /, '').replace(/ the .*$/, ''), svg('30 -10 140 175', drawCharacter(charView(friendState(f)))), S.friend === f.id)).join('');
-      case 'outfit': return outfitsFor(S.kind).map(o => tile(o.id, outfitName(o), svg(BODY, drawCharacter({ ...cv, outfit: o.id, item: 'none', cape: 'none' })), S.outfit === o.id)).join('');
+      case 'outfit': return `<div class="swatches">${OUTFIT_COLORS.map(c => `<button class="swatch oc${c.glitter ? ' glitter' : ''}${c.id === 'orig' ? ' orig' : ''}${(S.outfitColor || 'orig') === c.id ? ' sel' : ''}${isFav('color', c.id) ? ' fav' : ''}" data-oc="${c.id}" style="${c.main ? `--c:${c.main};--c2:${c.top || c.main}` : ''}" aria-label="${c.name}" title="${c.name}">${c.id === 'orig' ? '↺' : ''}${isFav('color', c.id) ? STAR : ''}</button>`).join('')}</div>` +
+        outfitsFor(S.kind).map(o => tile(o.id, outfitName(o), svg(BODY, drawCharacter({ ...cv, outfit: o.id, item: 'none', cape: 'none' })), S.outfit === o.id, '', isFav('outfit', o.id))).join('');
       case 'hair':
         return `<div class="swatches">${HAIR_COLORS.map(c => `<button class="swatch${S.hairColor === c ? ' sel' : ''}" data-color="${c}" style="background:${c}" aria-label="hair color"></button>`).join('')}</div>` +
-          HAIR_STYLES.map(h => tile(h.id, h.name, svg('20 -14 160 240', drawCharacter({ ...cv, hair: h.id, hat: 'none', item: 'none' })), S.hair === h.id)).join('');
-      case 'hat': return HATS.map(h => tile(h.id, h.name, svg('20 -34 160 170', drawCharacter({ ...cv, hat: h.id, item: 'none' })), S.hat === h.id)).join('');
-      case 'shoes': return SHOES.map(h => tile(h.id, h.name, svg(FEET, drawCharacter({ ...cv, outfit: 'bluetunic', shoes: h.id, cape: 'none', item: 'none' })), S.shoes === h.id)).join('');
-      case 'item': return ITEMS.map(h => tile(h.id, h.name, h.id === 'none' ? '<div class="none">✖️</div>' : svg('78 70 100 160', item(h.id, 128, 199)), S.item === h.id)).join('');
-      case 'cape': return CAPES.map(h => tile(h.id, h.name, svg(BODY, drawCharacter({ ...cv, cape: h.id, item: 'none' })), S.cape === h.id)).join('');
-      case 'pet': return PETS.map(h => tile(h.id, h.name, h.id === 'none' ? '<div class="none">✖️</div>' : svg('0 0 120 120', drawPet(h.id)), S.pet === h.id)).join('');
+          HAIR_STYLES.map(h => tile(h.id, h.name, svg('20 -14 160 240', drawCharacter({ ...cv, hair: h.id, hat: 'none', item: 'none' })), S.hair === h.id, '', isFav('hair', h.id))).join('');
+      case 'hat': return HATS.map(h => tile(h.id, h.name, svg('20 -34 160 170', drawCharacter({ ...cv, hat: h.id, item: 'none' })), S.hat === h.id, '', isFav('hat', h.id))).join('');
+      case 'shoes': return SHOES.map(h => tile(h.id, h.name, svg(FEET, drawCharacter({ ...cv, outfit: 'bluetunic', shoes: h.id, cape: 'none', item: 'none' })), S.shoes === h.id, '', isFav('shoes', h.id))).join('');
+      case 'item': return ITEMS.map(h => tile(h.id, h.name, h.id === 'none' ? '<div class="none">✖️</div>' : svg('78 70 100 160', item(h.id, 128, 199)), S.item === h.id, '', isFav('item', h.id))).join('');
+      case 'cape': return CAPES.map(h => tile(h.id, h.name, svg(BODY, drawCharacter({ ...cv, cape: h.id, item: 'none' })), S.cape === h.id, '', isFav('cape', h.id))).join('');
+      case 'pet': return PETS.map(h => tile(h.id, h.name, h.id === 'none' ? '<div class="none">✖️</div>' : svg('0 0 120 120', drawPet(h.id)), S.pet === h.id, '', isFav('pet', h.id))).join('');
       case 'stage': return STAGES.map(h => tile(h.id, h.name, `<svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">${drawStage(h.id)}</svg>`, S.stage === h.id, ' wide')).join('');
       case 'dance': return DANCES.map(d => tile(d.id, d.name, `<div class="emoji">${d.emoji}</div>`, S.dance === d.id && dancing)).join('');
       case 'music': return TRACKS.map(t => tile(t.id, t.name, `<div class="emoji">${t.emoji}</div>`, S.track === t.id && dancing)).join('');
@@ -219,6 +234,7 @@
   });
   $('#items').addEventListener('click', e => {
     const sw = e.target.closest('.swatch');
+    if (sw && sw.dataset.oc) { S.outfitColor = sw.dataset.oc; Music.chime(); renderAll(true); return; }
     if (sw) { S.hairColor = sw.dataset.color; renderAll(true); return; }
     const b = e.target.closest('.tile'); if (!b) return;
     const id = b.dataset.id;
@@ -250,7 +266,8 @@
     S.item = pick(ITEMS); S.cape = Math.random() < 0.35 ? pick(CAPES) : 'none';
     if (S.kind !== 'snowman') {
       S.shoes = pick(SHOES.filter(s => s.id !== 'barefoot'));
-      S.hairColor = Math.random() < 0.3 ? HAIR_COLORS[Math.floor(Math.random() * HAIR_COLORS.length)] : S.hairColor;
+      S.outfitColor = Math.random() < 0.45 ? OUTFIT_COLORS[1 + Math.floor(Math.random() * (OUTFIT_COLORS.length - 1))].id : 'orig';
+    S.hairColor = Math.random() < 0.3 ? HAIR_COLORS[Math.floor(Math.random() * HAIR_COLORS.length)] : S.hairColor;
     }
     Music.chime(); renderAll(true);
     const r = $('#hero').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * 0.4);
