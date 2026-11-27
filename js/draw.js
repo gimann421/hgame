@@ -376,7 +376,7 @@ function arm(side, o, skin, itemId) {
   return `<g class="p-arm${side}">${s}</g>`;
 }
 
-function twigArm(side, itemId) {
+function twigArm(side, itemId, mit = '#e53935', cuff = '#ffffff') {
   const L = side === 'L', dir = L ? -1 : 1;
   const sx = L ? 70 : 130, sy = 150, hx = L ? 72 : 128, hy = 201;
   const ex = sx + dir * 14, ey = 176; // elbow bend
@@ -384,9 +384,19 @@ function twigArm(side, itemId) {
   let s = `<path d="M${sx},${sy} L${ex},${ey} L${hx},${hy - 4}" stroke="${tw}" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
   s += `<path d="M${ex - dir * 2},${ey - 6} l${dir * 9},-6" stroke="${tw}" stroke-width="2.6" stroke-linecap="round"/>`;
   const holding = !L && itemId && itemId !== 'none';
-  if (holding) s = s + item(itemId, hx, hy - 2) + `<path d="M${hx - 5},${hy - 4} Q${hx},${hy - 7} ${hx + 5},${hy - 3} M${hx - 5},${hy + 1} Q${hx},${hy - 2} ${hx + 5},${hy + 2}" stroke="${tw}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-  else s += `<path d="M${hx},${hy - 4} l${dir * -4},9 M${hx},${hy - 4} l0,10 M${hx},${hy - 4} l${dir * 5},8" stroke="${tw}" stroke-width="2.4" stroke-linecap="round"/>`;
+  const line = shade(mit, -0.3);
+  const cuffBand = `<rect x="${hx - 6.5}" y="${hy - 9}" width="13" height="5" rx="2.5" fill="${cuff}" stroke="${line}" stroke-width=".6"/>`;
+  if (holding) s += item(itemId, hx, hy - 2) + `<path d="M${hx - 7},${hy - 5} C${hx - 8},${hy + 6} ${hx + 8},${hy + 6} ${hx + 7},${hy - 5}Z" fill="${mit}" stroke="${line}" stroke-width=".8"/><ellipse cx="${hx - dir * 5}" cy="${hy - 3}" rx="3" ry="4" fill="${mit}" stroke="${line}" stroke-width=".8"/>` + cuffBand;
+  else s += `<path d="M${hx - 6.5},${hy - 5} C${hx - 8},${hy + 9} ${hx + 8},${hy + 9} ${hx + 6.5},${hy - 5}Z" fill="${mit}" stroke="${line}" stroke-width=".8"/><ellipse cx="${hx - dir * 6.5}" cy="${hy + 1}" rx="3" ry="4.4" fill="${mit}" stroke="${line}" stroke-width=".8" transform="rotate(${dir * 20} ${hx - dir * 6.5} ${hy + 1})"/>` + cuffBand;
   return `<g class="p-arm${side}">${s}</g>`;
+}
+
+// A little pine sprig with red berries tucked on top of the snowman's head.
+function snowSprig(sn) {
+  const x = 110 + sn * 8;
+  return `<path d="M${x - 16},52 Q${x},40 ${x + 16},50" stroke="#2e7d32" stroke-width="2.4" fill="none" stroke-linecap="round"/>` +
+    [-12, -6, 0, 6, 12].map(d => `<path d="M${x + d},${47 + Math.abs(d) * 0.12} l-4,-6 M${x + d},${47 + Math.abs(d) * 0.12} l4,-6" stroke="#43a047" stroke-width="2" stroke-linecap="round"/>`).join('') +
+    `<circle cx="${x - 3}" cy="50" r="3.4" fill="#e53935"/><circle cx="${x + 3}" cy="51" r="3.4" fill="#d32f2f"/><circle cx="${x}" cy="46" r="3.4" fill="#ef5350"/><circle cx="${x - 0.8}" cy="44.8" r="1" fill="#fff" opacity=".7"/>`;
 }
 
 function face(st, yaw = 0) {
@@ -409,6 +419,11 @@ function face(st, yaw = 0) {
   const bc = shade(st.hairColor, -0.25);
   let eyes = '';
   for (const x of [86, 114]) {
+    if (st.kind === 'snowman') {
+      const o = x < 100 ? -1 : 1;
+      eyes += placed(x, yaw, `<ellipse cx="${x}" cy="88" rx="5.6" ry="7" fill="#263238"/><circle cx="${x + 1.8}" cy="85" r="2" fill="#fff"/><circle cx="${x - 1.6}" cy="91" r=".9" fill="#fff" opacity=".8"/><path d="M${x - 7},${76 + o} Q${x - o},${69} ${x + 7},${76 - o}" stroke="#6d4c41" stroke-width="2.6" fill="none" stroke-linecap="round"/>`, 0.18);
+      continue;
+    }
     let e = `<ellipse cx="${x}" cy="89" rx="6.6" ry="8.6" fill="#2a1a14"/><ellipse cx="${x}" cy="90.5" rx="5" ry="6.2" fill="${eye}"/><circle cx="${x}" cy="91" r="2.6" fill="#1a0f0b"/><circle cx="${x + 2.4}" cy="86" r="2.4" fill="#fff"/><circle cx="${x - 2.2}" cy="93.5" r="1.1" fill="#fff"/>`;
     if (st.lashes) { const o = x < 100 ? -1 : 1; e += `<path d="M${x + o * 5},${83} l${o * 4},-3 M${x + o * 6.3},${86} l${o * 4.5},-1.5" stroke="#2a1a14" stroke-width="1.8" stroke-linecap="round"/>`; }
     e += `<path d="M${x - 7},${x < 100 ? 76 : 75} Q${x},${72} ${x + 7},${x < 100 ? 75 : 76}" stroke="${bc}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
@@ -416,7 +431,7 @@ function face(st, yaw = 0) {
   }
   f += `<g class="p-eyes">${eyes}</g>`;
   if (snow) {
-    f += placed(100, yaw, [90, 95, 100, 105, 110].map((x, i) => `<circle cx="${x}" cy="${108 + [0, 2.6, 3.4, 2.6, 0][i]}" r="2.2" fill="#37474f"/>`).join(''), 0.2);
+    f += placed(100, yaw, [82, 88, 94, 100, 106, 112, 118].map((x, i) => `<circle cx="${x}" cy="${104 + [0, 4, 6.4, 7.2, 6.4, 4, 0][i]}" r="2.6" fill="#37474f"/>`).join(''), 0.2);
     // carrot nose, pointing out toward the side she is turned to
     const { x, k } = featureAt(100, yaw), dir = sn >= 0 ? 1 : -1, len = 10 + 12 * Math.abs(sn);
     if (k > -0.2) f += `<path d="M${(x - 4).toFixed(1)},96 L${(x + dir * len).toFixed(1)},100 L${(x - 3).toFixed(1)},103 Q${(x - 6).toFixed(1)},99.5 ${(x - 4).toFixed(1)},96Z" fill="#ff8a3d" stroke="#e8691d" stroke-width="1" stroke-linejoin="round"/><path d="M${(x + dir * 2).toFixed(1)},98 l0,2.5 M${(x + dir * 6).toFixed(1)},98.8 l0,2" stroke="#e8691d" stroke-width=".9"/>`;
@@ -494,7 +509,7 @@ function drawCharacter(st, yaw = 0, pose = null) {
   };
   const armSvg = (side) => {
     const x0 = side === 'L' ? 80 : 120, p = bodyX(x0, 20.5);
-    const drawn = snow ? twigArm(side, side === 'R' ? st.item : undefined) : arm(side, o, sk, side === 'R' ? st.item : undefined);
+    const drawn = snow ? twigArm(side, side === 'R' ? st.item : undefined, o.main, o.trim) : arm(side, o, sk, side === 'R' ? st.item : undefined);
     if (!turning) return { z: 0, svg: drawn };
     const alpha = pose ? (side === 'L' ? pose.armL : pose.armR) : 0;
     const v = armView(side, alpha, rad);
@@ -570,7 +585,7 @@ function drawCharacter(st, yaw = 0, pose = null) {
     ${sheetFront}
     ${capeInFront ? capeSvg : ''}
     ${armsFront}
-    <g class="p-head">${headParts}${hatSvg}</g>
+    <g class="p-head">${snow ? `<g transform="translate(100 120) scale(1.32) translate(-100 -120)">${headParts}${st.hat === 'none' ? snowSprig(sn) : hatSvg}</g>` : headParts + hatSvg}</g>
     ${armsNearest}
   </g></g>`;
 }
