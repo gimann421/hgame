@@ -173,6 +173,18 @@ const Music = (() => {
       const t = ctx.currentTime;
       [84, 88, 91, 96].forEach((m, i) => voice(mtof(m), t + i * 0.06, 0.1, { wave: 'sine', gain: 0.08, bell: true, decay: 0.4 }));
     },
+    // camera click: two short bursts of filtered noise
+    shutter() {
+      if (!ensure()) return;
+      const t = ctx.currentTime, len = Math.floor(ctx.sampleRate * 0.09);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+      [[0, 0.32], [0.075, 0.22]].forEach(([at, vol]) => {
+        const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        src.buffer = buf; f.type = 'highpass'; f.frequency.value = 1200; g.gain.value = vol;
+        src.connect(f); f.connect(g); g.connect(ctx.destination); src.start(t + at);
+      });
+    },
     set onBeat(fn) { onBeat = fn; },
     get playing() { return playing; }
   };
