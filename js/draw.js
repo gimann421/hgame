@@ -33,16 +33,19 @@ function flower(x, y, r, petal, center) {
 // ---------- turning (yaw in degrees: 0 = facing you, 90 = her side, 180 = her back) ----------
 let SPIN_SHIFT = 0; // slides skirt patterns sideways while she turns
 const HEAD_R = 36, HEAD_CY = 84;
+// Flurry only. A tall oval: height is 3x the width. The bottom stays on the upper snowball.
+const SNOW_HEAD_RX = 17, SNOW_HEAD_RY = 51, SNOW_HEAD_CY = 81;
 const clamp01 = v => Math.max(0, Math.min(1, v));
 // Where a face feature sits after the head turns. phi = the feature's own angle on the head.
-function featureAt(x0, yaw) {
-  const phi = Math.asin(Math.max(-1, Math.min(1, (x0 - 100) / HEAD_R)));
+// r is the head's horizontal radius (narrower for the snowman).
+function featureAt(x0, yaw, r = HEAD_R) {
+  const phi = Math.asin(Math.max(-1, Math.min(1, (x0 - 100) / r)));
   const a = phi + yaw * Math.PI / 180;
-  return { x: 100 + HEAD_R * Math.sin(a), k: Math.cos(a) };
+  return { x: 100 + r * Math.sin(a), k: Math.cos(a) };
 }
 // Draw a feature (designed around x0) moved and foreshortened for the turn.
-function placed(x0, yaw, inner, minK = 0.12) {
-  const { x, k } = featureAt(x0, yaw);
+function placed(x0, yaw, inner, minK = 0.12, r = HEAD_R) {
+  const { x, k } = featureAt(x0, yaw, r);
   if (k < minK) return '';
   return `<g transform="translate(${x.toFixed(2)} 0) scale(${k.toFixed(3)} 1) translate(${-x0} 0)">${inner}</g>`;
 }
@@ -389,10 +392,32 @@ function twigArm(side, itemId, mit = '#e53935', cuff = '#ffffff') {
   return `<g class="p-arm${side}">${s}</g>`;
 }
 
-// Two little twigs poking out of the top of the snowman's head.
+// Two little twigs poking out of the top of the snowman's tall head.
 function snowSprig(sn) {
-  const x = 100 + sn * 10, tw = '#6d4c41';
-  return `<path d="M${x - 9},52 L${x - 15},34 M${x - 13},40 l-7,-3 M${x + 9},52 L${x + 17},33 M${x + 14},40 l7,-4 M${x + 16},35 l1,-6" stroke="${tw}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const x = 100 + sn * 4, tw = '#6d4c41';
+  return `<path d="M${x - 4},39 L${x - 8},20 M${x - 6.5},28 l-5,-2 M${x + 4},39 L${x + 9},19 M${x + 7},27 l5,-2.5 M${x + 8},23 l1,-4" stroke="${tw}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+// Face laid out on Flurry's tall oval. Features stay inside the narrow width
+// and spread down the long axis: eyes high, carrot in the middle, grin below.
+function snowFace(yaw) {
+  const R = SNOW_HEAD_RX;
+  const put = (x0, inner, minK = 0.12) => placed(x0, yaw, inner, minK, R);
+  const blush = shade('#ff8a80', 0.25);
+  let f = '';
+  f += put(91, `<ellipse cx="91" cy="74" rx="3.2" ry="2" fill="${blush}" opacity=".55"/>`);
+  f += put(109, `<ellipse cx="109" cy="74" rx="3.2" ry="2" fill="${blush}" opacity=".55"/>`);
+  let eyes = '';
+  for (const x of [93, 107]) {
+    const o = x < 100 ? -1 : 1;
+    eyes += put(x, `<ellipse cx="${x}" cy="63" rx="4.1" ry="5.4" fill="#263238"/><circle cx="${x + 1.35}" cy="60.8" r="1.45" fill="#fff"/><circle cx="${x - 1.15}" cy="65.5" r=".7" fill="#fff" opacity=".8"/><path d="M${x - 4.6},${56.2 + o * 0.7} Q${x - o * 0.4},${50.5} ${x + 4.6},${56.2 - o * 0.7}" stroke="#6d4c41" stroke-width="2.1" fill="none" stroke-linecap="round"/>`, 0.18);
+  }
+  f += `<g class="p-eyes">${eyes}</g>`;
+  f += put(100, `<path d="M90,87 Q100,91 110,87 Q108.4,103 100,104.2 Q91.6,103 90,87Z" fill="#4a2228" stroke="#37474f" stroke-width="1.45" stroke-linejoin="round"/><path d="M94.2,98.5 Q100,93.4 105.8,98.5 Q103.4,103.4 100,103.6 Q96.6,103.4 94.2,98.5Z" fill="#f06292"/><path d="M88.3,86.2 Q89.6,84.6 91.3,86 M111.7,86.2 Q110.4,84.6 108.7,86" stroke="#37474f" stroke-width="1.4" fill="none" stroke-linecap="round"/>`, 0.2);
+  const sn = Math.sin(yaw * Math.PI / 180);
+  const { x, k } = featureAt(100, yaw, R), dir = sn >= 0 ? 1 : -1, len = 14 + 8 * Math.abs(sn);
+  if (k > -0.2) f += `<path d="M${(x - 2.8).toFixed(1)},75 L${(x + dir * len).toFixed(1)},79.4 L${(x - 2.2).toFixed(1)},83 Q${(x - 4.6).toFixed(1)},79 ${(x - 2.8).toFixed(1)},75Z" fill="#ff8a3d" stroke="#e8691d" stroke-width="1" stroke-linejoin="round"/><path d="M${(x + dir * 3).toFixed(1)},77.4 l0,2 M${(x + dir * 6.5).toFixed(1)},78.2 l0,1.7" stroke="#e8691d" stroke-width=".9"/>`;
+  return f;
 }
 
 function face(st, yaw = 0) {
@@ -402,10 +427,14 @@ function face(st, yaw = 0) {
   const snow = st.kind === 'snowman';
   const ears = snow ? [] : [ear(64), ear(136)];
   let s = ears.filter(e => e.k <= 0.02).map(e => e.svg).join('');
-  s += `<ellipse cx="100" cy="${HEAD_CY}" rx="${HEAD_R}" ry="37" fill="${sk}"/>`;
+  if (snow) {
+    s += `<ellipse cx="100" cy="${SNOW_HEAD_CY}" rx="${SNOW_HEAD_RX}" ry="${SNOW_HEAD_RY}" fill="url(#snowball)"/>`;
+    s += `<path d="M93,112 Q100,120 107,112" stroke="#d6e4f5" stroke-width="2.2" fill="none" opacity=".95"/>`;
+  } else s += `<ellipse cx="100" cy="${HEAD_CY}" rx="${HEAD_R}" ry="37" fill="${sk}"/>`;
   s += ears.filter(e => e.k > 0.02).map(e => e.svg).join('');
   const sn = Math.sin(yaw * Math.PI / 180), cs = Math.cos(yaw * Math.PI / 180);
-  if (!snow && Math.abs(sn) > 0.55 && cs > -0.3) { // a little nose and chin on the side view
+  if (snow) return s + snowFace(yaw);
+  if (Math.abs(sn) > 0.55 && cs > -0.3) { // a little nose and chin on the side view
     const x = 100 + Math.sign(sn) * (HEAD_R - 1);
     s += `<ellipse cx="${x.toFixed(1)}" cy="98" rx="4" ry="3.6" fill="${sk}"/>`;
   }
@@ -415,24 +444,12 @@ function face(st, yaw = 0) {
   const bc = shade(st.hairColor, -0.25);
   let eyes = '';
   for (const x of [86, 114]) {
-    if (st.kind === 'snowman') {
-      const o = x < 100 ? -1 : 1;
-      eyes += placed(x, yaw, `<ellipse cx="${x}" cy="88" rx="5.6" ry="7" fill="#263238"/><circle cx="${x + 1.8}" cy="85" r="2" fill="#fff"/><circle cx="${x - 1.6}" cy="91" r=".9" fill="#fff" opacity=".8"/><path d="M${x - 7},${76 + o} Q${x - o},${69} ${x + 7},${76 - o}" stroke="#6d4c41" stroke-width="2.6" fill="none" stroke-linecap="round"/>`, 0.18);
-      continue;
-    }
     let e = `<ellipse cx="${x}" cy="89" rx="6.6" ry="8.6" fill="#2a1a14"/><ellipse cx="${x}" cy="90.5" rx="5" ry="6.2" fill="${eye}"/><circle cx="${x}" cy="91" r="2.6" fill="#1a0f0b"/><circle cx="${x + 2.4}" cy="86" r="2.4" fill="#fff"/><circle cx="${x - 2.2}" cy="93.5" r="1.1" fill="#fff"/>`;
     if (st.lashes) { const o = x < 100 ? -1 : 1; e += `<path d="M${x + o * 5},${83} l${o * 4},-3 M${x + o * 6.3},${86} l${o * 4.5},-1.5" stroke="#2a1a14" stroke-width="1.8" stroke-linecap="round"/>`; }
     e += `<path d="M${x - 7},${x < 100 ? 76 : 75} Q${x},${72} ${x + 7},${x < 100 ? 75 : 76}" stroke="${bc}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
     eyes += placed(x, yaw, e, 0.18);
   }
   f += `<g class="p-eyes">${eyes}</g>`;
-  if (snow) {
-    f += placed(100, yaw, `<path d="M83,103 Q100,108 117,103 Q115,122 100,123 Q85,122 83,103Z" fill="#4a2228" stroke="#37474f" stroke-width="1.6" stroke-linejoin="round"/><path d="M90,118 Q100,111 110,118 Q106,122.4 100,122.6 Q94,122.4 90,118Z" fill="#f06292"/><path d="M80.5,102 Q82,100 84,101.5 M119.5,102 Q118,100 116,101.5" stroke="#37474f" stroke-width="1.6" fill="none" stroke-linecap="round"/>`, 0.2);
-    // carrot nose, pointing out toward the side she is turned to
-    const { x, k } = featureAt(100, yaw), dir = sn >= 0 ? 1 : -1, len = 10 + 12 * Math.abs(sn);
-    if (k > -0.2) f += `<path d="M${(x - 4).toFixed(1)},96 L${(x + dir * len).toFixed(1)},100 L${(x - 3).toFixed(1)},103 Q${(x - 6).toFixed(1)},99.5 ${(x - 4).toFixed(1)},96Z" fill="#ff8a3d" stroke="#e8691d" stroke-width="1" stroke-linejoin="round"/><path d="M${(x + dir * 2).toFixed(1)},98 l0,2.5 M${(x + dir * 6).toFixed(1)},98.8 l0,2" stroke="#e8691d" stroke-width=".9"/>`;
-    return s + f;
-  }
   f += placed(100, yaw, `<path d="M98,98 Q100,100 102,98" stroke="${shade(sk, -0.2)}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`);
   f += placed(100, yaw, `<path class="p-mouth" d="M91,105 Q100,115 109,105 Q100,108.5 91,105Z" fill="#d84a4a" stroke="#b23a3a" stroke-width="1.4" stroke-linejoin="round"/>`, 0.2);
   return s + f;
@@ -526,7 +543,8 @@ function drawCharacter(st, yaw = 0, pose = null) {
   const coal = snow ? [140, 157, 174].map(y => placed(100, yaw, `<circle cx="100" cy="${y}" r="3.6" fill="#37474f"/><circle cx="99" cy="${y - 1.2}" r="1" fill="#90a4ae"/>`)).join('') : '';
   const scarf = snow ? `<path d="M70,124 Q100,140 130,124 L131,134 Q100,150 69,134Z" fill="${o.main}"/><path d="M76,128 Q100,140 124,128" stroke="${o.trim}" stroke-width="2.5" fill="none" stroke-dasharray="5 4"/>` +
     (cs > -0.2 ? `<path d="M${(112 + sn * 6).toFixed(1)},134 L${(118 + sn * 6).toFixed(1)},170 L${(128 + sn * 6).toFixed(1)},167 L${(122 + sn * 6).toFixed(1)},133Z" fill="${o.main}"/><path d="M${(118 + sn * 6).toFixed(1)},170 l-1,5 M${(123 + sn * 6).toFixed(1)},169 l0,5 M${(128 + sn * 6).toFixed(1)},167 l1,5" stroke="${o.trim}" stroke-width="2" stroke-linecap="round"/>` : '') : '';
-  const torso = snow ? `${snowDefs}${snowBall(154, 35)}${coal}${scarf}` : `<g transform="translate(100 0) scale(${w} 1) translate(-100 0)">
+  // Scarf is drawn after the head so it wraps the chin where the tall oval meets the body.
+  const torso = snow ? `${snowDefs}${snowBall(154, 35)}${coal}` : `<g transform="translate(100 0) scale(${w} 1) translate(-100 0)">
     <rect x="93.5" y="108" width="13" height="26" rx="5" fill="${sk}"/><path d="M93.5,116 Q100,121 106.5,116" stroke="${shade(sk, -0.12)}" stroke-width="3" fill="none"/>
     ${P.torso}${cs < -0.15 ? torsoBack(o) : ''}${cs > 0.15 ? capeCollar(st.cape) : ''}</g>`;
 
@@ -564,7 +582,13 @@ function drawCharacter(st, yaw = 0, pose = null) {
   const backStrands = cs < -0.4 ? `<g opacity="${clamp01((-cs - 0.4) / 0.4).toFixed(2)}">${backStrandLines(st.hair, hc)}</g>` : '';
   const hTop = HAIR_TOP[st.hair] || 0;
   const frontHat = FRONT_HATS.includes(st.hat);
-  const hatSvg = !turning ? hat(st.hat, hTop) : frontHat ? (fringeK > 0.02 ? `<g transform="${fringeT}">${hat(st.hat, hTop)}</g>` : '') : `<g transform="translate(${(sn * 3).toFixed(2)} 0)">${hat(st.hat, hTop)}</g>`;
+  let hatSvg = !turning ? hat(st.hat, hTop) : frontHat ? (fringeK > 0.02 ? `<g transform="${fringeT}">${hat(st.hat, hTop)}</g>` : '') : `<g transform="translate(${(sn * 3).toFixed(2)} 0)">${hat(st.hat, hTop)}</g>`;
+  // Hats were drawn for the round head. Slide them up onto the tall crown and narrow them to it.
+  if (snow && hatSvg) {
+    const dy = (SNOW_HEAD_CY - SNOW_HEAD_RY) - (HEAD_CY - 37);
+    const sx = (SNOW_HEAD_RX / HEAD_R).toFixed(3);
+    hatSvg = `<g transform="translate(0 ${dy}) translate(100 0) scale(${sx} 1) translate(-100 0)">${hatSvg}</g>`;
+  }
   const headBack = turning ? backOfHead(yaw, hc, st.hair) : '';
   const headParts = FRINGE_STYLES.includes(st.hair) || !turning
     ? `${face(st, yaw)}${headBack}${turning && !snow ? earsOnTop(st, yaw) : ''}${front}${backStrands}`
@@ -581,7 +605,7 @@ function drawCharacter(st, yaw = 0, pose = null) {
     ${sheetFront}
     ${capeInFront ? capeSvg : ''}
     ${armsFront}
-    <g class="p-head">${snow ? `<g transform="translate(100 120) scale(1.32) translate(-100 -120)">${headParts}${st.hat === 'none' ? snowSprig(sn) : hatSvg}</g>` : headParts + hatSvg}</g>
+    <g class="p-head">${snow ? `<g transform="translate(100 120) scale(1.32) translate(-100 -120)">${headParts}${st.hat === 'none' ? snowSprig(sn) : hatSvg}</g>` : headParts + hatSvg}</g>${snow ? scarf : ''}
     ${armsNearest}
   </g></g>`;
 }
