@@ -30,8 +30,10 @@
   const charView = st => ({ ...st, skinColor: SKIN[st.skin] });
 
   // ---------- rendering ----------
+  let spinCache = {}, shownYaw = 0;
   function renderHero() {
-    $('#char').innerHTML = drawCharacter(charView(S));
+    spinCache = {};
+    $('#char').innerHTML = drawCharacter(charView(S), shownYaw);
     $('#pet').innerHTML = drawPet(S.pet);
     $('#petwrap').style.display = S.pet === 'none' ? 'none' : '';
     $('#bg svg').innerHTML = drawStage(S.stage);
@@ -84,12 +86,35 @@
 
   // ---------- dancing ----------
   const danceIds = DANCES.filter(d => d.id !== 'party').map(d => d.id);
+  // Spinning dances turn her around for real: she is redrawn at each angle.
+  const SPINS = {
+    twirl: p => p * 360,
+    ballet: p => p * 360,
+    shimmy: p => p < 0.6 ? 0 : (1 - Math.cos((p - 0.6) / 0.4 * Math.PI)) / 2 * 360
+  };
+  let moveId = 'none', moveStart = 0;
   function setMove(id) {
     const hero = $('#hero');
-    hero.className = hero.className.replace(/\bm-\S+/g, '').trim();
+    hero.className = hero.className.replace(/\bm-\S+/g, '').replace(/\bspin\b/, '').trim();
     void hero.offsetWidth; // restart animations
     hero.classList.add('m-' + id);
+    moveId = id; moveStart = performance.now();
+    hero.style.setProperty('--el', '0ms');
+    if (SPINS[id]) hero.classList.add('spin');
+    else if (shownYaw !== 0) { shownYaw = 0; $('#char').innerHTML = drawCharacter(charView(S), 0); }
   }
+  function spinFrame(now) {
+    requestAnimationFrame(spinFrame);
+    if (!dancing || !SPINS[moveId]) return;
+    const beatMs = 60000 / byId(TRACKS, S.track).bpm, el = now - moveStart;
+    const p = (el % (beatMs * 4)) / (beatMs * 4);
+    const yaw = Math.round(SPINS[moveId](p) / 6) * 6 % 360;
+    if (yaw === shownYaw) return;
+    shownYaw = yaw;
+    $('#hero').style.setProperty('--el', Math.round(el) + 'ms');
+    $('#char').innerHTML = spinCache[yaw] || (spinCache[yaw] = drawCharacter(charView(S), yaw));
+  }
+  requestAnimationFrame(spinFrame);
   function startDance() {
     const track = byId(TRACKS, S.track);
     Music.play(track);

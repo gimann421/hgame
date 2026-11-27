@@ -30,6 +30,33 @@ function flower(x, y, r, petal, center) {
   return s + `<circle cx="${x}" cy="${y}" r="${r * 0.7}" fill="${center}"/>`;
 }
 
+// ---------- turning (yaw in degrees: 0 = facing you, 90 = her side, 180 = her back) ----------
+let SPIN_SHIFT = 0; // slides skirt patterns sideways while she turns
+const HEAD_R = 36, HEAD_CY = 84;
+const clamp01 = v => Math.max(0, Math.min(1, v));
+// Where a face feature sits after the head turns. phi = the feature's own angle on the head.
+function featureAt(x0, yaw) {
+  const phi = Math.asin(Math.max(-1, Math.min(1, (x0 - 100) / HEAD_R)));
+  const a = phi + yaw * Math.PI / 180;
+  return { x: 100 + HEAD_R * Math.sin(a), k: Math.cos(a) };
+}
+// Draw a feature (designed around x0) moved and foreshortened for the turn.
+function placed(x0, yaw, inner, minK = 0.12) {
+  const { x, k } = featureAt(x0, yaw);
+  if (k < minK) return '';
+  return `<g transform="translate(${x.toFixed(2)} 0) scale(${k.toFixed(3)} 1) translate(${-x0} 0)">${inner}</g>`;
+}
+// The part of the head you see from behind: a crescent that grows into a full circle.
+function backOfHead(yaw, c) {
+  const s = Math.sin(yaw * Math.PI / 180), co = Math.cos(yaw * Math.PI / 180);
+  if (co > 0.985) return '';
+  const R = HEAD_R + 3, top = HEAD_CY - R - 1, bot = HEAD_CY + R + 1, rx = Math.max(0.01, R * Math.abs(co));
+  const left = s > 0; // face slides right, so the back shows on the left
+  const outerSweep = left ? 0 : 1;
+  const innerSweep = (co > 0) === left ? 1 : 0;
+  return `<path d="M100,${top} A${R},${R + 1} 0 0 ${outerSweep} 100,${bot} A${rx.toFixed(2)},${R + 1} 0 0 ${innerSweep} 100,${top}Z" fill="${c}"/>`;
+}
+
 // ---------- patterns scattered over a clip shape ----------
 function patternFill(kind, clipD, colors, box) {
   if (!kind || kind === 'none') return '';
@@ -45,11 +72,11 @@ function patternFill(kind, clipD, colors, box) {
     for (let y = y0; y < y1; y += 14) s += `<rect x="${x0}" y="${y}" width="${x1 - x0}" height="6" fill="${colors.stripe || '#1565c0'}" opacity=".85"/>`;
   } else if (kind === 'scales') {
     for (let y = y0, row = 0; y < y1; y += 9, row++)
-      for (let x = x0 + (row % 2) * 6; x < x1; x += 12) s += `<path d="M${x - 6},${y} Q${x},${y + 9} ${x + 6},${y}" fill="none" stroke="${light}" stroke-width="1.6" opacity=".8"/>`;
+      for (let x = x0 - 12 + (row % 2) * 6 + (SPIN_SHIFT % 12 + 12) % 12; x < x1; x += 12) s += `<path d="M${x - 6},${y} Q${x},${y + 9} ${x + 6},${y}" fill="none" stroke="${light}" stroke-width="1.6" opacity=".8"/>`;
   } else {
     let row = 0;
     for (let y = y0 + 8; y < y1; y += 22, row++) {
-      for (let x = x0 + 6 + (row % 2) * 11; x < x1; x += 22) {
+      for (let x = x0 - 16 + (row % 2) * 11 + (SPIN_SHIFT % 22 + 22) % 22; x < x1 + 6; x += 22) {
         if (kind === 'dots') s += `<circle cx="${x}" cy="${y}" r="3.2" fill="${light}"/>`;
         else if (kind === 'stars') s += `<path d="${starPath(x, y, 5, 2.2)}" fill="${colors.trim}"/>`;
         else if (kind === 'sparkle') s += `<path d="${starPath(x, y, 4.5, 1.2, 4)}" fill="#fff" opacity=".85"/>`;
@@ -316,54 +343,95 @@ function arm(side, o, skin, itemId) {
   return `<g class="p-arm${side}">${s}</g>`;
 }
 
-function face(st) {
+function face(st, yaw = 0) {
   const sk = st.skinColor, eye = st.eyes;
   const blush = shade('#ff8a80', 0.25);
-  let s = `<circle cx="64" cy="88" r="7" fill="${sk}"/><circle cx="136" cy="88" r="7" fill="${sk}"/>`;
-  s += `<ellipse cx="100" cy="84" rx="36" ry="37" fill="${sk}"/>`;
-  s += `<ellipse cx="79" cy="101" rx="7" ry="4.5" fill="${blush}" opacity=".55"/><ellipse cx="121" cy="101" rx="7" ry="4.5" fill="${blush}" opacity=".55"/>`;
-  s += `<g class="p-eyes">`;
-  for (const x of [86, 114]) {
-    s += `<ellipse cx="${x}" cy="89" rx="6.6" ry="8.6" fill="#2a1a14"/><ellipse cx="${x}" cy="90.5" rx="5" ry="6.2" fill="${eye}"/><circle cx="${x}" cy="91" r="2.6" fill="#1a0f0b"/><circle cx="${x + 2.4}" cy="86" r="2.4" fill="#fff"/><circle cx="${x - 2.2}" cy="93.5" r="1.1" fill="#fff"/>`;
-    if (st.lashes) {
-      const o = x < 100 ? -1 : 1;
-      s += `<path d="M${x + o * 5},${83} l${o * 4},-3 M${x + o * 6.3},${86} l${o * 4.5},-1.5" stroke="#2a1a14" stroke-width="1.8" stroke-linecap="round"/>`;
-    }
+  const ear = x0 => { const { x, k } = featureAt(x0, yaw); return { x, k, svg: `<ellipse cx="${x.toFixed(2)}" cy="88" rx="${(7 * Math.max(0.45, Math.abs(k) + 0.3)).toFixed(2)}" ry="7.4" fill="${sk}"/><ellipse cx="${x.toFixed(2)}" cy="88" rx="${(3 * Math.max(0.3, Math.abs(k))).toFixed(2)}" ry="3.6" fill="${shade(sk, -0.12)}"/>` }; };
+  const ears = [ear(64), ear(136)];
+  let s = ears.filter(e => e.k <= 0.02).map(e => e.svg).join('');
+  s += `<ellipse cx="100" cy="${HEAD_CY}" rx="${HEAD_R}" ry="37" fill="${sk}"/>`;
+  s += ears.filter(e => e.k > 0.02).map(e => e.svg).join('');
+  const sn = Math.sin(yaw * Math.PI / 180), cs = Math.cos(yaw * Math.PI / 180);
+  if (Math.abs(sn) > 0.55 && cs > -0.3) { // a little nose and chin on the side view
+    const x = 100 + Math.sign(sn) * (HEAD_R - 1);
+    s += `<ellipse cx="${x.toFixed(1)}" cy="98" rx="4" ry="3.6" fill="${sk}"/>`;
   }
-  s += `</g>`;
+  let f = '';
+  f += placed(79, yaw, `<ellipse cx="79" cy="101" rx="7" ry="4.5" fill="${blush}" opacity=".55"/>`);
+  f += placed(121, yaw, `<ellipse cx="121" cy="101" rx="7" ry="4.5" fill="${blush}" opacity=".55"/>`);
   const bc = shade(st.hairColor, -0.25);
-  s += `<path d="M79,76 Q86,72 93,75 M107,75 Q114,72 121,76" stroke="${bc}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-  s += `<path d="M98,98 Q100,100 102,98" stroke="${shade(sk, -0.2)}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
-  s += `<path class="p-mouth" d="M91,105 Q100,115 109,105 Q100,108.5 91,105Z" fill="#d84a4a" stroke="#b23a3a" stroke-width="1.4" stroke-linejoin="round"/>`;
-  return s;
+  let eyes = '';
+  for (const x of [86, 114]) {
+    let e = `<ellipse cx="${x}" cy="89" rx="6.6" ry="8.6" fill="#2a1a14"/><ellipse cx="${x}" cy="90.5" rx="5" ry="6.2" fill="${eye}"/><circle cx="${x}" cy="91" r="2.6" fill="#1a0f0b"/><circle cx="${x + 2.4}" cy="86" r="2.4" fill="#fff"/><circle cx="${x - 2.2}" cy="93.5" r="1.1" fill="#fff"/>`;
+    if (st.lashes) { const o = x < 100 ? -1 : 1; e += `<path d="M${x + o * 5},${83} l${o * 4},-3 M${x + o * 6.3},${86} l${o * 4.5},-1.5" stroke="#2a1a14" stroke-width="1.8" stroke-linecap="round"/>`; }
+    e += `<path d="M${x - 7},${x < 100 ? 76 : 75} Q${x},${72} ${x + 7},${x < 100 ? 75 : 76}" stroke="${bc}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    eyes += placed(x, yaw, e, 0.18);
+  }
+  f += `<g class="p-eyes">${eyes}</g>`;
+  f += placed(100, yaw, `<path d="M98,98 Q100,100 102,98" stroke="${shade(sk, -0.2)}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`);
+  f += placed(100, yaw, `<path class="p-mouth" d="M91,105 Q100,115 109,105 Q100,108.5 91,105Z" fill="#d84a4a" stroke="#b23a3a" stroke-width="1.4" stroke-linejoin="round"/>`, 0.2);
+  return s + f;
 }
 
 // st: { skinColor, hair, hairColor, eyes, lashes, outfit, hat, shoes, item, cape }
-function drawCharacter(st) {
+// yaw turns her around (0 = facing you, 180 = back). Her overall width stays the same.
+function drawCharacter(st, yaw = 0) {
+  yaw = ((yaw % 360) + 360) % 360;
+  const rad = yaw * Math.PI / 180, sn = Math.sin(rad), cs = Math.cos(rad);
+  SPIN_SHIFT = yaw * 0.35;
   const o = byId(OUTFITS, st.outfit);
   const sh = byId(SHOES, st.shoes);
   const sk = st.skinColor;
   const P = outfitParts(o, sk);
+  SPIN_SHIFT = 0;
   const legCol = P.legCol;
+  // body is a cylinder: shoulders and hips swing around the middle
+  const bodyX = (x0, r) => { const a = Math.asin((x0 - 100) / r) + rad; return { x: 100 + r * Math.sin(a), z: Math.cos(a) }; };
   const leg = (side) => {
-    const x = side === 'L' ? 92 : 108, dir = side === 'L' ? -1 : 1;
-    let pants = `<rect x="${x - 7.5}" y="198" width="15" height="${o.pants ? 120 : 124}" rx="7" fill="${legCol}"/>`;
-    if (o.pants) pants += `<rect x="${x - 8.5}" y="${306}" width="17" height="6" rx="3" fill="${shade(legCol, -0.12)}"/>`;
-    if (o.type === 'pajamas') pants += patternFill(o.pattern, `M${x - 7.5},198 h15 v120 h-15Z`, P.colors, [x - 8, 196, x + 8, 320]);
-    return `<g class="p-leg${side}">${pants}${shoe(sh, x, 320, dir, sk)}</g>`;
+    const x0 = side === 'L' ? 92 : 108, p = bodyX(x0, 9);
+    const dir = (Math.abs(sn) > 0.45 ? Math.sign(sn) : (side === 'L' ? -1 : 1)) * (cs < 0 ? -1 : 1);
+    let pants = `<rect x="${x0 - 7.5}" y="198" width="15" height="${o.pants ? 120 : 124}" rx="7" fill="${legCol}"/>`;
+    if (o.pants) pants += `<rect x="${x0 - 8.5}" y="${306}" width="17" height="6" rx="3" fill="${shade(legCol, -0.12)}"/>`;
+    if (o.type === 'pajamas') pants += patternFill(o.pattern, `M${x0 - 7.5},198 h15 v120 h-15Z`, P.colors, [x0 - 8, 196, x0 + 8, 320]);
+    const t = cs < 0 ? `translate(${p.x.toFixed(2)} 0) scale(-1 1) translate(${-x0} 0)` : `translate(${(p.x - x0).toFixed(2)} 0)`;
+    return { z: p.z, svg: `<g transform="${t}"><g class="p-leg${side}">${pants}${shoe(sh, x0, 320, dir, sk)}</g></g>` };
   };
+  const armSvg = (side) => {
+    const x0 = side === 'L' ? 80 : 120, p = bodyX(x0, 20.5);
+    // seen from behind, each arm is a mirror image, so "raise outward" still points away from her body
+    const t = cs < 0 ? `translate(${p.x.toFixed(2)} 0) scale(-1 1) translate(${-x0} 0)` : `translate(${(p.x - x0).toFixed(2)} 0)`;
+    return { z: p.z, svg: `<g transform="${t}">${arm(side, o, sk, side === 'R' ? st.item : undefined)}</g>` };
+  };
+  const legs = [leg('L'), leg('R')].sort((a, b) => a.z - b.z).map(l => l.svg).join('');
+  const arms = [armSvg('L'), armSvg('R')];
+  const behind = arms.filter(a => a.z < -0.05).map(a => a.svg).join('');
+  const front = arms.filter(a => a.z >= -0.05).map(a => a.svg).join('');
+  const w = (0.74 + 0.26 * Math.abs(cs)).toFixed(3);
+  const torsoFront = cs > -0.1 ? P.torso : `<g opacity="1">${P.torso}</g>`;
+  const torso = `<g transform="translate(100 0) scale(${w} 1) translate(-100 0)">
+    <rect x="93.5" y="108" width="13" height="26" rx="5" fill="${sk}"/><path d="M93.5,116 Q100,121 106.5,116" stroke="${shade(sk, -0.12)}" stroke-width="3" fill="none"/>
+    ${torsoFront}${cs > 0 ? capeCollar(st.cape) : ''}</g>`;
   const hTop = HAIR_TOP[st.hair] || 0;
+  const backness = clamp01((-cs + 0.05) / 0.4);   // 0 facing you, 1 showing her back
+  const frontHair = clamp01((cs + 0.35) / 0.55);
+  const hairShift = (sn * 10).toFixed(2);
+  const capeInFront = cs < -0.25;
   return `
   <g class="p-all"><g class="p-body">
-    ${cape(st.cape)}
+    ${capeInFront ? '' : cape(st.cape)}
     <g class="p-head">${hairBack(st.hair, st.hairColor)}</g>
-    ${leg('L')}${leg('R')}
+    ${behind}
+    ${legs}
     <g class="p-skirt">${P.skirt}</g>
-    <rect x="93.5" y="108" width="13" height="26" rx="5" fill="${sk}"/><path d="M93.5,116 Q100,121 106.5,116" stroke="${shade(sk, -0.12)}" stroke-width="3" fill="none"/>
-    ${P.torso}
-    ${capeCollar(st.cape)}
-    ${arm('L', o, sk)}${arm('R', o, sk, st.item)}
-    <g class="p-head">${face(st)}${hairFront(st.hair, st.hairColor)}<g class="p-back">${hairBackView(st.hair, st.hairColor)}</g>${hat(st.hat, hTop)}</g>
+    ${torso}
+    ${backness > 0 ? `<g class="p-head" opacity="${backness.toFixed(2)}">${hairBack(st.hair, st.hairColor)}</g>` : ''}
+    ${capeInFront ? cape(st.cape) : ''}
+    ${front}
+    <g class="p-head">${face(st, yaw)}
+      ${frontHair > 0 ? `<g opacity="${frontHair.toFixed(2)}" transform="translate(${hairShift} 0)">${hairFront(st.hair, st.hairColor)}</g>` : ''}
+      ${backOfHead(yaw, st.hairColor)}
+      ${backness > 0.02 ? `<g opacity="${backness.toFixed(2)}">${hairBackView(st.hair, st.hairColor).replace(hairBack(st.hair, st.hairColor), '')}</g>` : ''}
+      <g transform="translate(${(sn * 6).toFixed(2)} 0)">${hat(st.hat, hTop)}</g></g>
   </g></g>`;
 }
 

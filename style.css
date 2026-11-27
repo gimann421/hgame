@@ -145,7 +145,6 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 #char .p-legL { transform-origin: 92px 205px; }
 #char .p-legR { transform-origin: 108px 205px; }
 #char .p-skirt { transform-origin: 100px 192px; }
-.p-back { opacity: 0; }
 #char .p-eyes { transform-origin: 100px 89px; animation: blink 4.5s infinite; }
 #pet .pet-body { transform-box: view-box; transform-origin: 60px 118px; animation: petidle 2.4s ease-in-out infinite; }
 @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
@@ -166,13 +165,16 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .dancing #hero .p-skirt { animation: skirt calc(var(--beat) * 2) ease-in-out infinite; }
 @keyframes skirt { 0%,100% { transform: rotate(-3deg) scaleX(1.02); } 50% { transform: rotate(3deg) scaleX(.98); } }
 
+/* While spinning, the drawing is redrawn at each angle; keep every part's animation in step. */
+#hero.spin g, #hero.spin .p-eyes { animation-delay: calc(-1 * var(--el, 0ms)) !important; }
+#hero.spin .p-skirt { animation: flare calc(var(--beat) * 2) ease-in-out infinite; }
+@keyframes flare { 0%,100% { transform: scale(1.08, .97) rotate(-2deg); } 50% { transform: scale(1.1, .96) rotate(2deg); } }
 /* shorthand: B = one beat */
 /* Twirl */
 #hero.m-twirl .p-all { animation: twirlAll calc(var(--beat) * 4) linear infinite; }
-#hero.m-twirl .p-back { animation: backView calc(var(--beat) * 4) linear infinite; }
 #hero.m-twirl .p-armL { animation: twirlL calc(var(--beat) * 2) ease-in-out infinite; }
 #hero.m-twirl .p-armR { animation: twirlR calc(var(--beat) * 2) ease-in-out infinite; }
-@keyframes twirlAll { 0% { transform: scaleX(1); } 25% { transform: scaleX(.42) translateY(-6px); } 25.1% { transform: scaleX(-.42) translateY(-6px); } 50% { transform: scaleX(-1) translateY(-10px); } 75% { transform: scaleX(-.42) translateY(-6px); } 75.1% { transform: scaleX(.42) translateY(-6px); } 100% { transform: scaleX(1); } }
+@keyframes twirlAll { 0%,100% { transform: translateY(0); } 25%,75% { transform: translateY(-6px); } 50% { transform: translateY(-10px); } }
 @keyframes twirlL { 0%,100% { transform: rotate(115deg); } 50% { transform: rotate(150deg); } }
 @keyframes twirlR { 0%,100% { transform: rotate(-115deg); } 50% { transform: rotate(-150deg); } }
 
@@ -209,12 +211,11 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 
 /* Ballerina */
 #hero.m-ballet .p-all { animation: balletAll calc(var(--beat) * 4) linear infinite; }
-#hero.m-ballet .p-back { animation: backView calc(var(--beat) * 4) linear infinite; }
 #hero.m-ballet .p-armL { animation: balletL calc(var(--beat) * 2) ease-in-out infinite; }
 #hero.m-ballet .p-armR { animation: balletR calc(var(--beat) * 2) ease-in-out infinite; }
 #hero.m-ballet .p-legL { transform: rotate(5deg); animation: none; }
 #hero.m-ballet .p-legR { transform: rotate(-5deg); animation: none; }
-@keyframes balletAll { 0% { transform: translateY(-10px) scaleX(1); } 25% { transform: translateY(-14px) scaleX(.42); } 25.1% { transform: translateY(-14px) scaleX(-.42); } 50% { transform: translateY(-10px) scaleX(-1); } 75% { transform: translateY(-14px) scaleX(-.42); } 75.1% { transform: translateY(-14px) scaleX(.42); } 100% { transform: translateY(-10px) scaleX(1); } }
+@keyframes balletAll { 0%,50%,100% { transform: translateY(-10px); } 25%,75% { transform: translateY(-14px); } }
 @keyframes balletL { 0%,100% { transform: rotate(168deg); } 50% { transform: rotate(140deg); } }
 @keyframes balletR { 0%,100% { transform: rotate(-168deg); } 50% { transform: rotate(-140deg); } }
 
@@ -307,13 +308,10 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 
 /* Shimmy Spin */
 #hero.m-shimmy .p-all { animation: shimmyAll calc(var(--beat) * 4) linear infinite; }
-#hero.m-shimmy .p-back { animation: backViewShimmy calc(var(--beat) * 4) linear infinite; }
 #hero.m-shimmy .p-body { animation: wiggleBody calc(var(--beat) / 2) linear infinite; }
 #hero.m-shimmy .p-armL { animation: shimmyL calc(var(--beat) / 2) ease-in-out infinite; }
 #hero.m-shimmy .p-armR { animation: shimmyR calc(var(--beat) / 2) ease-in-out infinite; }
-@keyframes shimmyAll { 0%,60% { transform: scaleX(1); } 70% { transform: scaleX(.42) translateY(-6px); } 70.1% { transform: scaleX(-.42) translateY(-6px); } 80% { transform: scaleX(-1) translateY(-10px); } 90% { transform: scaleX(-.42) translateY(-6px); } 90.1% { transform: scaleX(.42) translateY(-6px); } 100% { transform: scaleX(1); } }
-@keyframes backViewShimmy { 0%,70% { opacity: 0; } 70.1%,90% { opacity: 1; } 90.1%,100% { opacity: 0; } }
-@keyframes backView { 0%,25% { opacity: 0; } 25.1%,75% { opacity: 1; } 75.1%,100% { opacity: 0; } }
+@keyframes shimmyAll { 0%,60%,100% { transform: translateY(0); } 80% { transform: translateY(-10px); } }
 @keyframes shimmyL { 0%,100% { transform: rotate(130deg); } 50% { transform: rotate(145deg); } }
 @keyframes shimmyR { 0%,100% { transform: rotate(-130deg); } 50% { transform: rotate(-145deg); } }
 
