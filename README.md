@@ -4,7 +4,7 @@ A dress-up and dance game made for iPad (works in any browser). It's for family 
 
 - **27 friends** (princesses, princes, a snowman and a mountain ice harvester) with different skin tones and hairstyles. Nine are inspired by old fairy tales: the girl with the longest hair, the snow queen, the girl with the crystal shoe, the sleepy rose princess, the mermaid, the princess with seven tiny friends, the book lover, the frog prince, and the boy with the beanstalk.
 - **Rename anyone:** tap the name at the top (✏️) to give a friend a new name.
-- **27 outfits** (ball gowns, dresses, shimmer gowns, tunics, royal coats, explorer gear, pajamas), plus 13 hairstyles in 12 colors, 15 hats and crowns, 12 pairs of shoes, 15 things to hold, 9 capes and 13 pets
+- **27 outfits** (ball gowns, dresses, shimmer gowns, tunics, royal coats, explorer gear, pajamas), plus 13 hairstyles in 13 colors, 15 hats and crowns, 12 pairs of shoes, 15 things to hold, 9 capes and 13 pets
 - **The Dance! button works at any time.** You don't need a matching outfit first.
 - **16 dances**, including "Mix It Up!", which switches moves every few bars. The spins turn all the way around, so you see the back of her head halfway through.
 - **12 songs**, all made up by the game's own synthesizer, so there are no recordings or licensed music

@@ -4,7 +4,7 @@
 const SKIN = ['#fbe1cc', '#f3c9a6', '#e3a97f', '#c98a57', '#9c643b', '#6f442a'];
 
 const HAIR_COLORS = [
-  '#2b1d16', '#4a2c1a', '#7a4a26', '#a2442a', '#d9692b', '#f2c75c',
+  '#2b1d16', '#4a2c1a', '#7a4a26', '#a2442a', '#d9692b', '#c8102e', '#f2c75c',
   '#f6ecd2', '#d9d4ee', '#f59ac0', '#6cb6f0', '#9b6cd8', '#5fcfa8'
 ];
 
