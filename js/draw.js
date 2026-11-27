@@ -384,19 +384,15 @@ function twigArm(side, itemId, mit = '#e53935', cuff = '#ffffff') {
   let s = `<path d="M${sx},${sy} L${ex},${ey} L${hx},${hy - 4}" stroke="${tw}" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
   s += `<path d="M${ex - dir * 2},${ey - 6} l${dir * 9},-6" stroke="${tw}" stroke-width="2.6" stroke-linecap="round"/>`;
   const holding = !L && itemId && itemId !== 'none';
-  const line = shade(mit, -0.3);
-  const cuffBand = `<rect x="${hx - 6.5}" y="${hy - 9}" width="13" height="5" rx="2.5" fill="${cuff}" stroke="${line}" stroke-width=".6"/>`;
-  if (holding) s += item(itemId, hx, hy - 2) + `<path d="M${hx - 7},${hy - 5} C${hx - 8},${hy + 6} ${hx + 8},${hy + 6} ${hx + 7},${hy - 5}Z" fill="${mit}" stroke="${line}" stroke-width=".8"/><ellipse cx="${hx - dir * 5}" cy="${hy - 3}" rx="3" ry="4" fill="${mit}" stroke="${line}" stroke-width=".8"/>` + cuffBand;
-  else s += `<path d="M${hx - 6.5},${hy - 5} C${hx - 8},${hy + 9} ${hx + 8},${hy + 9} ${hx + 6.5},${hy - 5}Z" fill="${mit}" stroke="${line}" stroke-width=".8"/><ellipse cx="${hx - dir * 6.5}" cy="${hy + 1}" rx="3" ry="4.4" fill="${mit}" stroke="${line}" stroke-width=".8" transform="rotate(${dir * 20} ${hx - dir * 6.5} ${hy + 1})"/>` + cuffBand;
+  if (holding) s += item(itemId, hx, hy - 2) + `<path d="M${hx - 5},${hy - 4} Q${hx},${hy - 7} ${hx + 5},${hy - 3} M${hx - 5},${hy + 1} Q${hx},${hy - 2} ${hx + 5},${hy + 2}" stroke="${tw}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  else s += `<path d="M${hx},${hy - 4} l${dir * -4},9 M${hx},${hy - 4} l0,10 M${hx},${hy - 4} l${dir * 5},8" stroke="${tw}" stroke-width="2.4" stroke-linecap="round"/>`;
   return `<g class="p-arm${side}">${s}</g>`;
 }
 
-// A little pine sprig with red berries tucked on top of the snowman's head.
+// Two little twigs poking out of the top of the snowman's head.
 function snowSprig(sn) {
-  const x = 110 + sn * 8;
-  return `<path d="M${x - 16},52 Q${x},40 ${x + 16},50" stroke="#2e7d32" stroke-width="2.4" fill="none" stroke-linecap="round"/>` +
-    [-12, -6, 0, 6, 12].map(d => `<path d="M${x + d},${47 + Math.abs(d) * 0.12} l-4,-6 M${x + d},${47 + Math.abs(d) * 0.12} l4,-6" stroke="#43a047" stroke-width="2" stroke-linecap="round"/>`).join('') +
-    `<circle cx="${x - 3}" cy="50" r="3.4" fill="#e53935"/><circle cx="${x + 3}" cy="51" r="3.4" fill="#d32f2f"/><circle cx="${x}" cy="46" r="3.4" fill="#ef5350"/><circle cx="${x - 0.8}" cy="44.8" r="1" fill="#fff" opacity=".7"/>`;
+  const x = 100 + sn * 10, tw = '#6d4c41';
+  return `<path d="M${x - 9},52 L${x - 15},34 M${x - 13},40 l-7,-3 M${x + 9},52 L${x + 17},33 M${x + 14},40 l7,-4 M${x + 16},35 l1,-6" stroke="${tw}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
 }
 
 function face(st, yaw = 0) {
@@ -431,7 +427,7 @@ function face(st, yaw = 0) {
   }
   f += `<g class="p-eyes">${eyes}</g>`;
   if (snow) {
-    f += placed(100, yaw, [82, 88, 94, 100, 106, 112, 118].map((x, i) => `<circle cx="${x}" cy="${104 + [0, 4, 6.4, 7.2, 6.4, 4, 0][i]}" r="2.6" fill="#37474f"/>`).join(''), 0.2);
+    f += placed(100, yaw, `<path d="M83,103 Q100,108 117,103 Q115,122 100,123 Q85,122 83,103Z" fill="#4a2228" stroke="#37474f" stroke-width="1.6" stroke-linejoin="round"/><path d="M90,118 Q100,111 110,118 Q106,122.4 100,122.6 Q94,122.4 90,118Z" fill="#f06292"/><path d="M80.5,102 Q82,100 84,101.5 M119.5,102 Q118,100 116,101.5" stroke="#37474f" stroke-width="1.6" fill="none" stroke-linecap="round"/>`, 0.2);
     // carrot nose, pointing out toward the side she is turned to
     const { x, k } = featureAt(100, yaw), dir = sn >= 0 ? 1 : -1, len = 10 + 12 * Math.abs(sn);
     if (k > -0.2) f += `<path d="M${(x - 4).toFixed(1)},96 L${(x + dir * len).toFixed(1)},100 L${(x - 3).toFixed(1)},103 Q${(x - 6).toFixed(1)},99.5 ${(x - 4).toFixed(1)},96Z" fill="#ff8a3d" stroke="#e8691d" stroke-width="1" stroke-linejoin="round"/><path d="M${(x + dir * 2).toFixed(1)},98 l0,2.5 M${(x + dir * 6).toFixed(1)},98.8 l0,2" stroke="#e8691d" stroke-width=".9"/>`;
