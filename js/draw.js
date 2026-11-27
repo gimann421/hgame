@@ -501,10 +501,11 @@ function drawCharacter(st, yaw = 0, pose = null) {
   yaw = ((yaw % 360) + 360) % 360;
   const rad = yaw * Math.PI / 180, sn = Math.sin(rad), cs = Math.cos(rad);
   const turning = yaw !== 0 || pose;
+  const snow = st.kind === 'snowman';
+  // Ignore hair and shoes chosen on another friend: twigs and snowball feet stay put.
+  if (snow) st = { ...st, skinColor: '#f7fbff', hair: 'none', shoes: 'barefoot' };
   const o = byId(OUTFITS, st.outfit);
   const sh = byId(SHOES, st.shoes);
-  const snow = st.kind === 'snowman';
-  if (snow) st = { ...st, skinColor: '#f7fbff' };
   const sk = st.skinColor, hc = st.hairColor;
   SPIN_SHIFT = yaw * 0.35;
   const P = outfitParts(o, sk);
@@ -542,7 +543,8 @@ function drawCharacter(st, yaw = 0, pose = null) {
   const snowBall = (cy, r) => `<circle cx="100" cy="${cy}" r="${r}" fill="url(#snowball)"/><path d="M${100 - r * 0.7},${cy + r * 0.55} Q100,${cy + r * 1.02} ${100 + r * 0.7},${cy + r * 0.55}" stroke="#d6e4f5" stroke-width="3" fill="none" opacity=".8"/>`;
   const snowDefs = `<defs><radialGradient id="snowball" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#f1f6fd"/><stop offset="1" stop-color="#d3e1f2"/></radialGradient></defs>`;
   const coal = snow ? [140, 157, 174].map(y => placed(100, yaw, `<circle cx="100" cy="${y}" r="3.6" fill="#37474f"/><circle cx="99" cy="${y - 1.2}" r="1" fill="#90a4ae"/>`)).join('') : '';
-  const scarf = snow ? `<path d="M70,124 Q100,140 130,124 L131,134 Q100,150 69,134Z" fill="${o.main}"/><path d="M76,128 Q100,140 124,128" stroke="${o.trim}" stroke-width="2.5" fill="none" stroke-dasharray="5 4"/>` +
+  const scarfOn = snow && o.id !== 'noscarf';
+  const scarf = scarfOn ? `<path d="M70,124 Q100,140 130,124 L131,134 Q100,150 69,134Z" fill="${o.main}"/><path d="M76,128 Q100,140 124,128" stroke="${o.trim}" stroke-width="2.5" fill="none" stroke-dasharray="5 4"/>` +
     (cs > -0.2 ? `<path d="M${(112 + sn * 6).toFixed(1)},134 L${(118 + sn * 6).toFixed(1)},170 L${(128 + sn * 6).toFixed(1)},167 L${(122 + sn * 6).toFixed(1)},133Z" fill="${o.main}"/><path d="M${(118 + sn * 6).toFixed(1)},170 l-1,5 M${(123 + sn * 6).toFixed(1)},169 l0,5 M${(128 + sn * 6).toFixed(1)},167 l1,5" stroke="${o.trim}" stroke-width="2" stroke-linecap="round"/>` : '') : '';
   // Scarf is drawn after the head so it wraps the chin where the tall oval meets the body.
   const torso = snow ? `${snowDefs}${snowBall(154, 35)}${coal}` : `<g transform="translate(100 0) scale(${w} 1) translate(-100 0)">

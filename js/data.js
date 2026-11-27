@@ -52,8 +52,42 @@ const OUTFITS = [
   { id: 'meadow', name: 'Meadow Gown', type: 'gown', main: '#fff59d', top: '#f48fb1', trim: '#ffffff', sleeve: 'puff', pattern: 'flowers' },
   { id: 'pjstars', name: 'Cozy Star Pajamas', type: 'pajamas', main: '#b39ddb', top: '#b39ddb', trim: '#fff59d', sleeve: 'long', pants: '#b39ddb', pattern: 'stars' },
   { id: 'mountain', name: 'Mountain Sweater', type: 'tunic', main: '#c0392b', top: '#c0392b', trim: '#f5e6c8', sleeve: 'long', pants: '#6d4c41', pattern: 'none' },
-  { id: 'pjhearts', name: 'Cozy Heart Pajamas', type: 'pajamas', main: '#f8bbd0', top: '#f8bbd0', trim: '#ffffff', sleeve: 'long', pants: '#f8bbd0', pattern: 'hearts' }
+  { id: 'pjhearts', name: 'Cozy Heart Pajamas', type: 'pajamas', main: '#f8bbd0', top: '#f8bbd0', trim: '#ffffff', sleeve: 'long', pants: '#f8bbd0', pattern: 'hearts' },
+  // Flurry only. He has no gown to draw, so this leaves the scarf off.
+  { id: 'noscarf', name: 'No Scarf', type: 'scarf', main: '#f7fbff', trim: '#f7fbff', sleeve: 'none', pattern: 'none', forKind: 'snowman' }
 ];
+
+// Flurry draws each shared outfit as a scarf (body color plus stitch and fringe).
+// These labels are what the Outfits tab shows for him. Other friends keep `name`.
+const SNOW_OUTFIT_NAMES = {
+  rose: 'Pink Scarf',
+  sun: 'Gold Scarf',
+  frost: 'Ice Blue Scarf',
+  lavender: 'Lilac Scarf',
+  forest: 'Green Scarf',
+  ruby: 'Ruby & Gold Scarf',
+  midnight: 'Indigo & Gold Scarf',
+  rainbow: 'Coral Scarf',
+  peach: 'Peach Scarf',
+  picnic: 'Soft Yellow Scarf',
+  garden: 'Green & Yellow Scarf',
+  party: 'Purple & Blue Scarf',
+  ocean: 'Teal Scarf',
+  sunset: 'Orange Scarf',
+  bluetunic: 'Blue & Gold Scarf',
+  archer: 'Green & Brown Scarf',
+  knight: 'Red & Silver Scarf',
+  royalcoat: 'Red & Gold Scarf',
+  nightcoat: 'Navy Scarf',
+  goldcoat: 'Cream & Gold Scarf',
+  explorer: 'Brown & Orange Scarf',
+  captain: 'Deep Blue & Gold Scarf',
+  starball: 'White & Blue Scarf',
+  meadow: 'Lemon Scarf',
+  pjstars: 'Plum & Yellow Scarf',
+  mountain: 'Red & Cream Scarf',
+  pjhearts: 'Light Pink Scarf'
+};
 
 const HATS = [
   { id: 'none', name: 'Nothing' },

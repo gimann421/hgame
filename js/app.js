@@ -29,8 +29,9 @@
     const base = friendState(byId(FRIENDS, S.friend));
     if (!ok(FRIENDS, S.friend)) Object.assign(S, base);
     if (S.hair === 'none' && base.hair !== 'none') S.hair = base.hair;
-    for (const [k, list] of [['outfit', OUTFITS], ['hair', [...HAIR_STYLES, { id: 'none' }]], ['hat', HATS], ['shoes', SHOES], ['item', ITEMS], ['cape', CAPES], ['pet', PETS]])
+    for (const [k, list] of [['outfit', outfitsFor(S.kind)], ['hair', [...HAIR_STYLES, { id: 'none' }]], ['hat', HATS], ['shoes', SHOES], ['item', ITEMS], ['cape', CAPES], ['pet', PETS]])
       if (!ok(list, S[k])) S[k] = ok(list, base[k]) ? base[k] : list[0].id;
+    if (S.kind === 'snowman' && (S.tab === 'hair' || S.tab === 'shoes')) S.tab = 'outfit';
     if (!ok(STAGES, S.stage)) S.stage = 'ballroom';
     if (!ok(DANCES, S.dance)) S.dance = 'twirl';
     if (!ok(TRACKS, S.track)) S.track = 'pop';
@@ -38,6 +39,19 @@
     if (!SKIN[S.skin]) S.skin = base.skin;
     if (typeof S.hairColor !== 'string' || !/^#[0-9a-f]{3,8}$/i.test(S.hairColor)) S.hairColor = base.hairColor;
     for (const id of Object.keys(S.names)) if (!ok(FRIENDS, id) || typeof S.names[id] !== 'string') delete S.names[id];
+  }
+  // Snowman-only outfits (No Scarf) stay out of everyone else's list, and sit first for Flurry.
+  function outfitsFor(kind) {
+    const shared = OUTFITS.filter(o => !o.forKind);
+    if (kind !== 'snowman') return shared;
+    return OUTFITS.filter(o => o.forKind === 'snowman').concat(shared);
+  }
+  function outfitName(o) {
+    return S.kind === 'snowman' && SNOW_OUTFIT_NAMES[o.id] ? SNOW_OUTFIT_NAMES[o.id] : o.name;
+  }
+  // Flurry has twigs and snowball feet, so Hair and Shoes are not offered. Other friends see every tab.
+  function tabsForState() {
+    return S.kind === 'snowman' ? TABS.filter(t => t.id !== 'hair' && t.id !== 'shoes') : TABS;
   }
   const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const nameOf = id => S.names[id] || byId(FRIENDS, id).name;
@@ -65,7 +79,7 @@
     const cv = charView(S);
     switch (tab) {
       case 'friends': return FRIENDS.map(f => tile(f.id, S.names[f.id] ? esc(S.names[f.id]) : f.name.replace(/^(Princess|Prince|Snow Queen) /, '').replace(/ the .*$/, ''), svg('30 -10 140 175', drawCharacter(charView(friendState(f)))), S.friend === f.id)).join('');
-      case 'outfit': return OUTFITS.map(o => tile(o.id, o.name, svg(BODY, drawCharacter({ ...cv, outfit: o.id, item: 'none', cape: 'none' })), S.outfit === o.id)).join('');
+      case 'outfit': return outfitsFor(S.kind).map(o => tile(o.id, outfitName(o), svg(BODY, drawCharacter({ ...cv, outfit: o.id, item: 'none', cape: 'none' })), S.outfit === o.id)).join('');
       case 'hair':
         return `<div class="swatches">${HAIR_COLORS.map(c => `<button class="swatch${S.hairColor === c ? ' sel' : ''}" data-color="${c}" style="background:${c}" aria-label="hair color"></button>`).join('')}</div>` +
           HAIR_STYLES.map(h => tile(h.id, h.name, svg('20 -14 160 240', drawCharacter({ ...cv, hair: h.id, hat: 'none', item: 'none' })), S.hair === h.id)).join('');
@@ -82,7 +96,9 @@
   }
 
   function renderTabs() {
-    $('#tabs').innerHTML = TABS.map(t => `<button class="tab${S.tab === t.id ? ' sel' : ''}" data-tab="${t.id}"><span class="ti">${t.icon}</span><span class="tl">${t.label}</span></button>`).join('');
+    const tabs = tabsForState();
+    if (!tabs.some(t => t.id === S.tab)) S.tab = 'outfit';
+    $('#tabs').innerHTML = tabs.map(t => `<button class="tab${S.tab === t.id ? ' sel' : ''}" data-tab="${t.id}"><span class="ti">${t.icon}</span><span class="tl">${t.label}</span></button>`).join('');
   }
   function renderItems(keepScroll) {
     const box = $('#items');
@@ -209,9 +225,9 @@
     switch (S.tab) {
       case 'friends': Object.assign(S, friendState(byId(FRIENDS, id))); break;
       case 'outfit': S.outfit = id; break;
-      case 'hair': S.hair = id; break;
+      case 'hair': if (S.kind === 'snowman') return; S.hair = id; break;
       case 'hat': S.hat = id; break;
-      case 'shoes': S.shoes = id; break;
+      case 'shoes': if (S.kind === 'snowman') return; S.shoes = id; break;
       case 'item': S.item = id; break;
       case 'cape': S.cape = id; break;
       case 'pet': S.pet = id; break;
@@ -230,9 +246,12 @@
   });
   $('#surprise').addEventListener('click', () => {
     const pick = l => l[Math.floor(Math.random() * l.length)].id;
-    S.outfit = pick(OUTFITS); S.hat = pick(HATS); S.shoes = pick(SHOES.filter(s => s.id !== 'barefoot'));
+    S.outfit = pick(outfitsFor(S.kind)); S.hat = pick(HATS);
     S.item = pick(ITEMS); S.cape = Math.random() < 0.35 ? pick(CAPES) : 'none';
-    S.hairColor = Math.random() < 0.3 ? HAIR_COLORS[Math.floor(Math.random() * HAIR_COLORS.length)] : S.hairColor;
+    if (S.kind !== 'snowman') {
+      S.shoes = pick(SHOES.filter(s => s.id !== 'barefoot'));
+      S.hairColor = Math.random() < 0.3 ? HAIR_COLORS[Math.floor(Math.random() * HAIR_COLORS.length)] : S.hairColor;
+    }
     Music.chime(); renderAll(true);
     const r = $('#hero').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * 0.4);
   });
