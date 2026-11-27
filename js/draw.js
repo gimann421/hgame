@@ -33,8 +33,8 @@ function flower(x, y, r, petal, center) {
 // ---------- turning (yaw in degrees: 0 = facing you, 90 = her side, 180 = her back) ----------
 let SPIN_SHIFT = 0; // slides skirt patterns sideways while she turns
 const HEAD_R = 36, HEAD_CY = 84;
-// Flurry only. A tall oval: height is 3x the width. The bottom stays on the upper snowball.
-const SNOW_HEAD_RX = 17, SNOW_HEAD_RY = 51, SNOW_HEAD_CY = 81;
+// Flurry only. Tall head, wider through the eyes and nose than at the crown or chin.
+const SNOW_HEAD_RX = 22, SNOW_HEAD_RY = 51, SNOW_HEAD_CY = 81;
 const clamp01 = v => Math.max(0, Math.min(1, v));
 // Where a face feature sits after the head turns. phi = the feature's own angle on the head.
 // r is the head's horizontal radius (narrower for the snowman).
@@ -413,7 +413,7 @@ function snowFace(yaw) {
     eyes += put(x, `<ellipse cx="${x}" cy="63" rx="4.1" ry="5.4" fill="#263238"/><circle cx="${x + 1.35}" cy="60.8" r="1.45" fill="#fff"/><circle cx="${x - 1.15}" cy="65.5" r=".7" fill="#fff" opacity=".8"/><path d="M${x - 4.6},${56.2 + o * 0.7} Q${x - o * 0.4},${50.5} ${x + 4.6},${56.2 - o * 0.7}" stroke="#6d4c41" stroke-width="2.1" fill="none" stroke-linecap="round"/>`, 0.18);
   }
   f += `<g class="p-eyes">${eyes}</g>`;
-  f += put(100, `<path d="M90,87 Q100,91 110,87 Q108.4,103 100,104.2 Q91.6,103 90,87Z" fill="#4a2228" stroke="#37474f" stroke-width="1.45" stroke-linejoin="round"/><path d="M94.2,98.5 Q100,93.4 105.8,98.5 Q103.4,103.4 100,103.6 Q96.6,103.4 94.2,98.5Z" fill="#f06292"/><path d="M88.3,86.2 Q89.6,84.6 91.3,86 M111.7,86.2 Q110.4,84.6 108.7,86" stroke="#37474f" stroke-width="1.4" fill="none" stroke-linecap="round"/>`, 0.2);
+  f += put(100, `<path d="M90,87 Q100,91 110,87 Q108.4,103 100,104.2 Q91.6,103 90,87Z" fill="#4a2228" stroke="#37474f" stroke-width="1.45" stroke-linejoin="round"/><path d="M94.2,98.5 Q100,93.4 105.8,98.5 Q103.4,103.4 100,103.6 Q96.6,103.4 94.2,98.5Z" fill="#f06292"/><path d="M88.3,86.2 Q89.6,84.6 91.3,86 M111.7,86.2 Q110.4,84.6 108.7,86" stroke="#37474f" stroke-width="1.4" fill="none" stroke-linecap="round"/><rect x="96.2" y="90.6" width="3.2" height="6.5" rx="1.15" fill="#fff" stroke="#37474f" stroke-width=".7"/><rect x="100.6" y="90.6" width="3.2" height="6.5" rx="1.15" fill="#fff" stroke="#37474f" stroke-width=".7"/>`, 0.2);
   const sn = Math.sin(yaw * Math.PI / 180);
   const { x, k } = featureAt(100, yaw, R), dir = sn >= 0 ? 1 : -1, len = 14 + 8 * Math.abs(sn);
   if (k > -0.2) f += `<path d="M${(x - 2.8).toFixed(1)},75 L${(x + dir * len).toFixed(1)},79.4 L${(x - 2.2).toFixed(1)},83 Q${(x - 4.6).toFixed(1)},79 ${(x - 2.8).toFixed(1)},75Z" fill="#ff8a3d" stroke="#e8691d" stroke-width="1" stroke-linejoin="round"/><path d="M${(x + dir * 3).toFixed(1)},77.4 l0,2 M${(x + dir * 6.5).toFixed(1)},78.2 l0,1.7" stroke="#e8691d" stroke-width=".9"/>`;
@@ -428,8 +428,9 @@ function face(st, yaw = 0) {
   const ears = snow ? [] : [ear(64), ear(136)];
   let s = ears.filter(e => e.k <= 0.02).map(e => e.svg).join('');
   if (snow) {
-    s += `<ellipse cx="100" cy="${SNOW_HEAD_CY}" rx="${SNOW_HEAD_RX}" ry="${SNOW_HEAD_RY}" fill="url(#snowball)"/>`;
-    s += `<path d="M93,112 Q100,120 107,112" stroke="#d6e4f5" stroke-width="2.2" fill="none" opacity=".95"/>`;
+    // Narrow crown and chin, with a belly that juts out around the eyes and nose.
+    s += `<path d="M100,31 C107,42 123,58 124,74 C126,98 112,120 100,133 C88,120 74,98 76,74 C77,58 93,42 100,31Z" fill="url(#snowball)"/>`;
+    s += `<path d="M93,112 Q100,122 107,112" stroke="#d6e4f5" stroke-width="2.2" fill="none" opacity=".95"/>`;
   } else s += `<ellipse cx="100" cy="${HEAD_CY}" rx="${HEAD_R}" ry="37" fill="${sk}"/>`;
   s += ears.filter(e => e.k > 0.02).map(e => e.svg).join('');
   const sn = Math.sin(yaw * Math.PI / 180), cs = Math.cos(yaw * Math.PI / 180);
@@ -594,8 +595,10 @@ function drawCharacter(st, yaw = 0, pose = null) {
     ? `${face(st, yaw)}${headBack}${turning && !snow ? earsOnTop(st, yaw) : ''}${front}${backStrands}`
     : `${face(st, yaw)}${headBack}${turning && !snow ? earsOnTop(st, yaw) : ''}${backStrands}${front}`;
 
+  // About 20% shorter, with the feet still on the ground.
+  const snowFit = snow ? '<g transform="translate(0 318) scale(1 0.8) translate(0 -318)">' : '';
   return `
-  <g class="p-all"><g class="p-body">
+  <g class="p-all"><g class="p-body">${snowFit}
     ${capeInFront ? '' : capeSvg}
     <g class="p-head">${turning ? `<g transform="${sheetT}">${sheet}</g>` : sheet}</g>
     ${armsBehind}
@@ -607,7 +610,7 @@ function drawCharacter(st, yaw = 0, pose = null) {
     ${armsFront}
     <g class="p-head">${snow ? `<g transform="translate(100 120) scale(1.32) translate(-100 -120)">${headParts}${st.hat === 'none' ? snowSprig(sn) : hatSvg}</g>` : headParts + hatSvg}</g>${snow ? scarf : ''}
     ${armsNearest}
-  </g></g>`;
+  ${snow ? '</g>' : ''}</g></g>`;
 }
 
 // ---------- pets (120 x 120 box), soft shading and outlines ----------
