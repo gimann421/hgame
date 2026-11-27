@@ -34,7 +34,6 @@
   <section id="panel">
     <div id="tabsWrap"><nav id="tabs"></nav></div>
     <div id="items" class="items"></div>
-    <button id="updateBtn" type="button">🔄 Get the newest version</button>
   </section>
 </div>
 <script src="js/data.js"></script>
@@ -55,19 +54,10 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     const check = () => reg.update().catch(() => {});
     document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
     window.addEventListener('pageshow', check);
+    window.addEventListener('online', check);
     setInterval(check, 15 * 60 * 1000);
   }).catch(() => {});
 }
-// The small "newest version" button at the bottom: clear the saved copy and load fresh files.
-document.getElementById('updateBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('updateBtn');
-  btn.textContent = '🔄 Updating…';
-  try {
-    if ('caches' in window) for (const k of await caches.keys()) await caches.delete(k);
-    if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.update().catch(() => {});
-  } catch (e) {}
-  location.reload();
-});
 </script>
 </body>
 </html>
