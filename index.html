@@ -34,6 +34,7 @@
   <section id="panel">
     <div id="tabsWrap"><nav id="tabs"></nav></div>
     <div id="items" class="items"></div>
+    <button id="updateBtn" type="button">🔄 Get the newest version</button>
   </section>
 </div>
 <script src="js/data.js"></script>
@@ -41,7 +42,32 @@
 <script src="js/music.js"></script>
 <script src="js/app.js"></script>
 <script>
-if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+// Offline copy + automatic updates: check for a new version whenever the app is opened or comes back
+// to the front, and reload once when a new version takes over.
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true; location.reload();
+  });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    const check = () => reg.update().catch(() => {});
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+    window.addEventListener('pageshow', check);
+    setInterval(check, 15 * 60 * 1000);
+  }).catch(() => {});
+}
+// The small "newest version" button at the bottom: clear the saved copy and load fresh files.
+document.getElementById('updateBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('updateBtn');
+  btn.textContent = '🔄 Updating…';
+  try {
+    if ('caches' in window) for (const k of await caches.keys()) await caches.delete(k);
+    if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.update().catch(() => {});
+  } catch (e) {}
+  location.reload();
+});
 </script>
 </body>
 </html>

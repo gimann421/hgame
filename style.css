@@ -324,3 +324,8 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 @keyframes shimmyR { 0%,100% { transform: rotate(-130deg); } 50% { transform: rotate(-145deg); } }
 
 @media (prefers-reduced-motion: reduce) { .note { display: none; } }
+
+/* Small, quiet button under everything for grown-ups: reloads the newest version of the game */
+#updateBtn { display: block; margin: 4px auto calc(14px + env(safe-area-inset-bottom, 0px)); padding: 8px 14px;
+  font-size: 13px; font-weight: 700; color: #7e6aa8; opacity: .7; border-radius: 999px; background: #efe6fb; flex: none; }
+#updateBtn:active { opacity: 1; }
