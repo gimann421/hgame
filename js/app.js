@@ -20,8 +20,10 @@
   function friendState(f) {
     return { friend: f.id, skin: f.skin, hair: f.hair, hairColor: f.hairColor, eyes: f.eyes, lashes: f.lashes, ...f.look };
   }
-  let S = { ...friendState(FRIENDS[0]), stage: 'ballroom', dance: 'twirl', track: 'pop', tab: 'friends' };
+  let S = { ...friendState(FRIENDS[0]), stage: 'ballroom', dance: 'twirl', track: 'pop', tab: 'friends', names: {} };
   try { const saved = JSON.parse(localStorage.getItem(SAVE_KEY)); if (saved && saved.friend) S = { ...S, ...saved }; } catch (e) {}
+  if (!S.names || typeof S.names !== 'object') S.names = {};
+  const nameOf = id => S.names[id] || byId(FRIENDS, id).name;
   const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} };
 
   let dancing = false, mixTimer = null, noteTimer = null;
@@ -33,7 +35,7 @@
     $('#pet').innerHTML = drawPet(S.pet);
     $('#petwrap').style.display = S.pet === 'none' ? 'none' : '';
     $('#bg svg').innerHTML = drawStage(S.stage);
-    $('#nameTag').textContent = byId(FRIENDS, S.friend).name;
+    $('#nameText').textContent = nameOf(S.friend);
   }
 
   const svg = (vb, inner) => `<svg viewBox="${vb}" aria-hidden="true">${inner}</svg>`;
@@ -43,7 +45,7 @@
   function tilesFor(tab) {
     const cv = charView(S);
     switch (tab) {
-      case 'friends': return FRIENDS.map(f => tile(f.id, f.name.replace(/^(Princess|Prince) /, ''), svg('30 -10 140 175', drawCharacter(charView(friendState(f)))), S.friend === f.id)).join('');
+      case 'friends': return FRIENDS.map(f => tile(f.id, S.names[f.id] || f.name.replace(/^(Princess|Prince|Snow Queen) /, ''), svg('30 -10 140 175', drawCharacter(charView(friendState(f)))), S.friend === f.id)).join('');
       case 'outfit': return OUTFITS.map(o => tile(o.id, o.name, svg(BODY, drawCharacter({ ...cv, outfit: o.id, item: 'none', cape: 'none' })), S.outfit === o.id)).join('');
       case 'hair':
         return `<div class="swatches">${HAIR_COLORS.map(c => `<button class="swatch${S.hairColor === c ? ' sel' : ''}" data-color="${c}" style="background:${c}" aria-label="hair color"></button>`).join('')}</div>` +
@@ -187,6 +189,22 @@
       const h = $('#hero'); h.classList.remove('boing'); void h.offsetWidth; h.classList.add('boing');
     }
   });
+
+  // ---------- renaming ----------
+  const box = $('#renameBox'), input = $('#nameInput');
+  $('#nameTag').addEventListener('click', () => {
+    input.value = nameOf(S.friend); box.hidden = false; $('#nameTag').hidden = true;
+    input.focus(); input.select();
+  });
+  const closeRename = () => { box.hidden = true; $('#nameTag').hidden = false; input.blur(); renderAll(true); };
+  box.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = input.value.trim().slice(0, 24);
+    if (v && v !== byId(FRIENDS, S.friend).name) S.names[S.friend] = v; else delete S.names[S.friend];
+    Music.chime(); closeRename();
+  });
+  $('#nameReset').addEventListener('click', () => { delete S.names[S.friend]; closeRename(); });
+  box.addEventListener('pointerdown', e => e.stopPropagation());
 
   renderAll();
 })();

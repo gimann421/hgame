@@ -108,6 +108,15 @@ function hairBack(style, c) {
     case 'bun': return `<circle cx="100" cy="34" r="21" fill="${c}"/><path d="M90,30 Q100,22 110,30" stroke="${d}" stroke-width="2" fill="none"/><path d="M62,88 C56,38 144,38 138,88Z" fill="${c}"/>`;
     case 'ponytail': return `<path d="M124,52 Q178,70 160,180 Q150,150 140,130 Q150,95 120,70Z" fill="${c}"/><path d="M62,88 C56,38 144,38 138,88Z" fill="${c}"/><circle cx="128" cy="58" r="6" fill="#ec407a"/>`;
     case 'braids': return `<path d="M62,90 C56,38 144,38 138,90Z" fill="${c}"/>`;
+    case 'longbraid': {
+      let b = `<path d="M60,85 C54,34 146,34 140,85 C144,110 146,130 140,140 Q100,150 60,140 C54,130 56,110 60,85Z" fill="${c}"/>`;
+      const pts = [];
+      for (let i = 0; i <= 22; i++) { const t = i / 22; pts.push([136 + 26 * Math.sin(t * 2.4) + t * 18, 110 + t * 222]); }
+      pts.push([178, 336], [192, 330], [200, 318]);
+      pts.forEach(([x, y], i) => { b += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${Math.max(6, 11 - i * 0.2).toFixed(1)}" ry="8" fill="${i % 2 ? c : shade(c, -0.08)}"/>`; });
+      [[150, 160, '#f48fb1'], [164, 220, '#ce93d8'], [168, 280, '#fff59d'], [190, 330, '#81d4fa']].forEach(([x, y, f]) => { b += flower(x, y, 3.4, f, '#fff'); });
+      return b;
+    }
     case 'curly': return `<path d="M62,86 C58,40 142,40 138,86Z" fill="${c}"/>` + arcCircles(100, 78, 38, 180, 360, 11, 11, c);
     case 'spiky': case 'short': case 'pixie':
     default: return `<path d="M61,90 C56,38 144,38 139,90 Q100,76 61,90Z" fill="${c}"/>`;
@@ -118,7 +127,7 @@ function hairFront(style, c) {
   const sweep = `<path d="M63,92 C58,48 84,40 100,40 C122,40 144,50 137,92 C134,72 124,62 110,58 C100,68 82,72 70,72 C66,78 64,85 63,92Z" fill="${c}"/><path d="M106,48 Q90,52 80,62" stroke="${l}" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>`;
   const part = `<path d="M63,92 C58,46 142,46 137,92 C134,70 120,58 100,56 C80,58 66,70 63,92Z" fill="${c}"/><path d="M100,44 L100,57" stroke="${d}" stroke-width="2"/>`;
   switch (style) {
-    case 'long': case 'wavy': case 'ponytail': return sweep;
+    case 'long': case 'wavy': case 'ponytail': case 'longbraid': return sweep;
     case 'bob': return `<path d="M62,90 C58,42 142,42 138,90 L136,74 Q100,64 64,74Z" fill="${c}"/>`;
     case 'bun': case 'puffs': return part;
     case 'braids': {
@@ -139,6 +148,17 @@ function hairFront(style, c) {
     case 'pixie': return `<path d="M62,86 C58,44 142,40 140,80 Q138,62 124,56 Q118,74 88,74 Q70,74 62,86Z" fill="${c}"/><path d="M120,48 Q100,58 84,64" stroke="${l}" stroke-width="3" fill="none" opacity=".7" stroke-linecap="round"/>`;
   }
   return sweep;
+}
+
+// What the head looks like from behind, shown in the middle of a spin.
+function hairBackView(style, c) {
+  const d = shade(c, -0.18), l = shade(c, 0.2);
+  let s = hairBack(style, c) + `<ellipse cx="100" cy="82" rx="38.5" ry="40" fill="${c}"/>`;
+  if (['short', 'spiky', 'pixie', 'curly'].includes(style)) s += `<path d="M66,100 Q100,124 134,100 L134,108 Q100,128 66,108Z" fill="${d}" opacity=".5"/>`;
+  s += `<path d="M100,46 Q96,80 100,118" stroke="${d}" stroke-width="2" fill="none" opacity=".6"/><path d="M84,56 Q80,80 84,108 M116,56 Q120,80 116,108" stroke="${l}" stroke-width="2.4" fill="none" opacity=".55"/>`;
+  if (style === 'afro') s += arcCircles(100, 82, 38, 0, 360, 16, 10, c);
+  if (style === 'curly') s += arcCircles(100, 84, 34, 0, 360, 14, 9, c);
+  return s;
 }
 
 // ---------- hats ----------
@@ -251,6 +271,30 @@ function outfitParts(o, skin) {
   return { skirt, torso, legCol, over, colors };
 }
 
+// A hand hanging at the end of the arm. inward = which way the thumb points (toward the body).
+function hand(hx, hy, skin, inward, holding, held) {
+  const line = shade(skin, -0.28), top = hy - 4;
+  let s = '';
+  if (!holding) {
+    [[-4.2, 5.2, 9], [-1.45, 7, 3], [1.45, 6.6, -3], [4.2, 5, -9]].forEach(([dx, len, rot]) => {
+      const x = hx + dx * 0.95, y = hy + 3;
+      s += `<rect x="${(x - 1.45).toFixed(2)}" y="${y}" width="2.9" height="${len + 2}" rx="1.45" fill="${skin}" stroke="${line}" stroke-width=".7" transform="rotate(${rot * 0.6} ${x} ${y})"/>`;
+    });
+  }
+  s += `<path d="M${hx - 5.6},${top} Q${hx - 6.6},${hy + 4} ${hx - 4.2},${hy + 6.2} L${hx + 4.2},${hy + 6.2} Q${hx + 6.6},${hy + 4} ${hx + 5.6},${top}Z" fill="${skin}"/>`;
+  s += `<path d="M${hx - 5.6},${top} Q${hx - 6.6},${hy + 4} ${hx - 4.4},${hy + 5.6} M${hx + 5.6},${top} Q${hx + 6.6},${hy + 4} ${hx + 4.4},${hy + 5.6}" stroke="${line}" stroke-width=".8" fill="none"/>`;
+  if (holding) {
+    s += held;
+    for (let i = 0; i < 4; i++) {
+      const y = hy - 2.5 + i * 2.7;
+      s += `<rect x="${hx - 5.8 + (i === 3 ? 1 : 0)}" y="${y}" width="${11.6 - (i === 3 ? 2 : 0)}" height="3" rx="1.5" fill="${skin}" stroke="${line}" stroke-width=".7"/>`;
+    }
+  }
+  const tx = hx + inward * 5.4, ty = hy + (holding ? -3 : 0.5);
+  s += `<ellipse cx="${tx}" cy="${ty}" rx="2.2" ry="4.6" fill="${skin}" stroke="${line}" stroke-width=".7" transform="rotate(${inward * (holding ? 70 : -22)} ${tx} ${ty})"/>`;
+  return s;
+}
+
 function arm(side, o, skin, itemId) {
   const L = side === 'L';
   const sx = L ? 80 : 120, hx = L ? 72 : 128, sy = 140, hy = 201;
@@ -266,8 +310,9 @@ function arm(side, o, skin, itemId) {
   } else if (sl === 'cap') {
     s += `<ellipse cx="${sx}" cy="${sy + 1}" rx="10" ry="7" fill="${tr}" opacity=".9"/>`;
   }
-  s += `<circle cx="${hx}" cy="${hy}" r="6.8" fill="${skin}"/>`;
-  if (!L && itemId) s = s + item(itemId, hx, hy - 2);
+  const holding = !L && itemId && itemId !== 'none';
+  if (holding) s += hand(hx, hy, skin, L ? 1 : -1, true, item(itemId, hx, hy - 2));
+  else s += hand(hx, hy, skin, L ? 1 : -1, false, '');
   return `<g class="p-arm${side}">${s}</g>`;
 }
 
@@ -318,27 +363,165 @@ function drawCharacter(st) {
     ${P.torso}
     ${capeCollar(st.cape)}
     ${arm('L', o, sk)}${arm('R', o, sk, st.item)}
-    <g class="p-head">${face(st)}${hairFront(st.hair, st.hairColor)}${hat(st.hat, hTop)}</g>
+    <g class="p-head">${face(st)}${hairFront(st.hair, st.hairColor)}<g class="p-back">${hairBackView(st.hair, st.hairColor)}</g>${hat(st.hat, hTop)}</g>
   </g></g>`;
 }
 
-// ---------- pets (120 x 120 box) ----------
+// ---------- pets (120 x 120 box), soft shading and outlines ----------
 function drawPet(id) {
-  const eyes = (x1, x2, y, c = '#2a1a14') => `<circle cx="${x1}" cy="${y}" r="4" fill="${c}"/><circle cx="${x2}" cy="${y}" r="4" fill="${c}"/><circle cx="${x1 + 1.3}" cy="${y - 1.4}" r="1.4" fill="#fff"/><circle cx="${x2 + 1.3}" cy="${y - 1.4}" r="1.4" fill="#fff"/>`;
-  const smile = (x, y) => `<path d="M${x - 5},${y} Q${x - 2.5},${y + 4} ${x},${y} Q${x + 2.5},${y + 4} ${x + 5},${y}" stroke="#4e342e" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+  const uid = 'p' + (++UID);
+  let defs = '', n = 0;
+  const G = base => {
+    const gid = uid + '_' + (n++);
+    defs += `<radialGradient id="${gid}" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="${shade(base, 0.5)}"/><stop offset=".5" stop-color="${base}"/><stop offset="1" stop-color="${shade(base, -0.2)}"/></radialGradient>`;
+    return `url(#${gid})`;
+  };
+  const O = base => `stroke="${shade(base, -0.45)}" stroke-width="2" stroke-linejoin="round"`;
+  const eye = (x, y, r, iris, lashes) => {
+    let e = `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 1.18}" fill="#24160f"/><ellipse cx="${x}" cy="${y + r * 0.25}" rx="${r * 0.72}" ry="${r * 0.82}" fill="${iris}"/><ellipse cx="${x}" cy="${y + r * 0.35}" rx="${r * 0.38}" ry="${r * 0.45}" fill="#24160f"/><circle cx="${x + r * 0.35}" cy="${y - r * 0.4}" r="${r * 0.38}" fill="#fff"/><circle cx="${x - r * 0.35}" cy="${y + r * 0.5}" r="${r * 0.16}" fill="#fff"/>`;
+    if (lashes) e += `<path d="M${x - r * 0.9},${y - r * 0.7} l-3,-3 M${x - r * 0.5},${y - r * 1.05} l-1.5,-3.5" stroke="#24160f" stroke-width="1.6" stroke-linecap="round"/>`;
+    return e;
+  };
+  const blush = (x1, x2, y) => `<ellipse cx="${x1}" cy="${y}" rx="5" ry="3" fill="#ff8fab" opacity=".55"/><ellipse cx="${x2}" cy="${y}" rx="5" ry="3" fill="#ff8fab" opacity=".55"/>`;
+  const wmouth = (x, y, c = '#5d3a2a') => `<path d="M${x - 5},${y} Q${x - 2.5},${y + 3.5} ${x},${y} Q${x + 2.5},${y + 3.5} ${x + 5},${y}" stroke="${c}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
   let s = '';
   switch (id) {
-    case 'kitty': s = `<path class="pet-tail" d="M84,92 Q112,90 104,60" stroke="#ffb74d" stroke-width="9" fill="none" stroke-linecap="round"/><ellipse cx="60" cy="92" rx="26" ry="20" fill="#ffb74d"/><path d="M34,46 L38,18 L56,36Z M86,46 L82,18 L64,36Z" fill="#ffb74d"/><path d="M40,38 L41,26 L50,34Z M80,38 L79,26 L70,34Z" fill="#f8bbd0"/><circle cx="60" cy="52" r="27" fill="#ffb74d"/><path d="M42,40 l8,4 M60,30 v8 M78,40 l-8,4" stroke="#f57c00" stroke-width="3" stroke-linecap="round"/>` + eyes(50, 70, 52) + `<path d="M57,60 L63,60 L60,63Z" fill="#f06292"/>` + smile(60, 64) + `<path d="M36,60 l-12,-2 M36,64 l-12,2 M84,60 l12,-2 M84,64 l12,2" stroke="#fff" stroke-width="1.5"/>`; break;
-    case 'puppy': s = `<path class="pet-tail" d="M84,88 Q104,84 100,66" stroke="#d7a86e" stroke-width="8" fill="none" stroke-linecap="round"/><ellipse cx="60" cy="92" rx="26" ry="20" fill="#d7a86e"/><circle cx="60" cy="54" r="27" fill="#d7a86e"/><ellipse cx="34" cy="56" rx="10" ry="20" fill="#8d6e63"/><ellipse cx="86" cy="56" rx="10" ry="20" fill="#8d6e63"/><ellipse cx="60" cy="66" rx="13" ry="10" fill="#f5e1c8"/>` + eyes(50, 70, 50) + `<ellipse cx="60" cy="61" rx="5" ry="3.6" fill="#3e2723"/><path d="M60,64 v4" stroke="#3e2723" stroke-width="1.6"/><ellipse cx="60" cy="74" rx="4" ry="5" fill="#f06292"/>`; break;
-    case 'bunny': s = `<circle class="pet-tail" cx="86" cy="96" r="8" fill="#fff"/><ellipse cx="60" cy="94" rx="24" ry="18" fill="#f5f5f5"/><ellipse cx="48" cy="18" rx="8" ry="22" fill="#f5f5f5"/><ellipse cx="48" cy="20" rx="4" ry="16" fill="#f8bbd0"/><ellipse cx="72" cy="18" rx="8" ry="22" fill="#f5f5f5"/><ellipse cx="72" cy="20" rx="4" ry="16" fill="#f8bbd0"/><circle cx="60" cy="56" r="25" fill="#f5f5f5"/>` + eyes(50, 70, 54) + `<path d="M57,62 L63,62 L60,65Z" fill="#f06292"/>` + smile(60, 66) + `<ellipse cx="44" cy="64" rx="5" ry="3" fill="#f8bbd0"/><ellipse cx="76" cy="64" rx="5" ry="3" fill="#f8bbd0"/>`; break;
-    case 'fox': s = `<path class="pet-tail" d="M82,96 Q118,96 110,62 Q104,80 84,86Z" fill="#ff7043"/><path d="M104,66 Q110,62 110,62 Q112,72 106,76Z" fill="#fff"/><ellipse cx="60" cy="94" rx="24" ry="18" fill="#ff7043"/><path d="M32,44 L36,14 L56,34Z M88,44 L84,14 L64,34Z" fill="#ff7043"/><path d="M34,54 Q60,24 86,54 Q74,84 60,84 Q46,84 34,54Z" fill="#ff7043"/><path d="M40,60 Q60,70 80,60 Q72,82 60,82 Q48,82 40,60Z" fill="#fff"/>` + eyes(50, 70, 54) + `<circle cx="60" cy="72" r="3.6" fill="#3e2723"/>`; break;
-    case 'unicorn': s = `<ellipse cx="62" cy="92" rx="30" ry="18" fill="#fafafa"/><rect x="40" y="98" width="8" height="20" rx="4" fill="#fafafa"/><rect x="74" y="98" width="8" height="20" rx="4" fill="#fafafa"/><path class="pet-tail" d="M90,88 Q112,90 108,112 Q100,98 92,98Z" fill="#ce93d8"/><path d="M40,90 L42,48 L64,60Z" fill="#fafafa"/><ellipse cx="44" cy="44" rx="20" ry="16" fill="#fafafa"/><ellipse cx="32" cy="50" rx="9" ry="8" fill="#f8bbd0"/><path d="M50,30 L58,4 L58,32Z" fill="#ffd54f"/><path d="M52,24 L58,22 M53,17 L58,15" stroke="#ffb300" stroke-width="1.5"/><path d="M58,32 Q72,36 70,52 Q76,64 66,76" stroke="#f48fb1" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M62,34 Q78,42 74,58" stroke="#81d4fa" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M52,30 L56,22 L60,30Z" fill="#fafafa"/><circle cx="44" cy="42" r="3.6" fill="#2a1a14"/><circle cx="45" cy="41" r="1.2" fill="#fff"/>`; break;
-    case 'dragon': s = `<path class="pet-tail" d="M84,98 Q110,104 108,80 L114,74 L104,74Z" fill="#66bb6a"/><path d="M30,72 L8,50 L22,82Z M90,72 L112,50 L98,82Z" fill="#a5d6a7"/><ellipse cx="60" cy="92" rx="26" ry="21" fill="#66bb6a"/><ellipse cx="60" cy="96" rx="15" ry="14" fill="#fff59d"/><circle cx="60" cy="52" r="26" fill="#66bb6a"/><path d="M42,32 L40,18 L50,28Z M78,32 L80,18 L70,28Z" fill="#fff59d"/>` + eyes(50, 70, 50) + `<ellipse cx="60" cy="64" rx="12" ry="7" fill="#81c784"/><circle cx="55" cy="63" r="1.6" fill="#2e7d32"/><circle cx="65" cy="63" r="1.6" fill="#2e7d32"/>` + smile(60, 70); break;
-    case 'owl': s = `<ellipse cx="60" cy="72" rx="32" ry="38" fill="#8d6e63"/><ellipse cx="60" cy="84" rx="20" ry="22" fill="#d7ccc8"/><path d="M30,40 L36,24 L48,38Z M90,40 L84,24 L72,38Z" fill="#8d6e63"/><circle cx="46" cy="52" r="13" fill="#fff"/><circle cx="74" cy="52" r="13" fill="#fff"/>` + eyes(46, 74, 52) + `<path d="M56,62 L64,62 L60,70Z" fill="#ffb300"/><path class="pet-tail" d="M28,70 Q16,86 30,98 M92,70 Q104,86 90,98" stroke="#6d4c41" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M50,110 v6 M56,110 v6 M64,110 v6 M70,110 v6" stroke="#ffb300" stroke-width="3" stroke-linecap="round"/>`; break;
-    case 'penguin': s = `<ellipse cx="60" cy="70" rx="30" ry="42" fill="#263238"/><ellipse cx="60" cy="78" rx="20" ry="32" fill="#fff"/><path class="pet-tail" d="M30,64 Q18,82 26,96 M90,64 Q102,82 94,96" stroke="#263238" stroke-width="9" fill="none" stroke-linecap="round"/>` + eyes(52, 68, 52) + `<path d="M54,60 L66,60 L60,68Z" fill="#ffa726"/><ellipse cx="50" cy="112" rx="9" ry="4" fill="#ffa726"/><ellipse cx="70" cy="112" rx="9" ry="4" fill="#ffa726"/><ellipse cx="46" cy="64" rx="4" ry="2.5" fill="#f8bbd0"/><ellipse cx="74" cy="64" rx="4" ry="2.5" fill="#f8bbd0"/>`; break;
+    case 'kitty': {
+      const c = '#f6a04d', cream = '#fff3e0';
+      s = `<path class="pet-tail" d="M82,104 C108,106 112,80 100,66 C96,62 92,66 96,70 C104,82 100,96 80,96Z" fill="${G(c)}" ${O(c)}/><path d="M98,70 l6,4 M101,80 l7,1" stroke="#d9772a" stroke-width="2.5" stroke-linecap="round"/>
+        <ellipse cx="60" cy="92" rx="25" ry="22" fill="${G(c)}" ${O(c)}/><ellipse cx="60" cy="96" rx="13" ry="15" fill="${cream}"/>
+        <ellipse cx="49" cy="111" rx="8" ry="5.5" fill="${G(cream)}" ${O(c)}/><ellipse cx="71" cy="111" rx="8" ry="5.5" fill="${G(cream)}" ${O(c)}/>
+        <path d="M32,48 Q30,20 38,16 Q48,22 56,32Z" fill="${G(c)}" ${O(c)}/><path d="M88,48 Q90,20 82,16 Q72,22 64,32Z" fill="${G(c)}" ${O(c)}/>
+        <path d="M37,40 Q37,26 40,23 Q46,27 50,33Z M83,40 Q83,26 80,23 Q74,27 70,33Z" fill="#f8a5c2"/>
+        <path d="M28,58 Q24,64 30,66 Q26,72 34,72 M92,58 Q96,64 90,66 Q94,72 86,72" fill="none" ${O(c)}/>
+        <ellipse cx="60" cy="54" rx="31" ry="27" fill="${G(c)}" ${O(c)}/>
+        <path d="M52,30 Q54,38 56,40 M60,28 V40 M68,30 Q66,38 64,40" stroke="#d9772a" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <ellipse cx="54" cy="66" rx="8" ry="6" fill="${cream}"/><ellipse cx="66" cy="66" rx="8" ry="6" fill="${cream}"/>
+        ${eye(47, 54, 6.2, '#43a047')}${eye(73, 54, 6.2, '#43a047')}
+        <path d="M57,61.5 Q60,59.5 63,61.5 Q60,65 57,61.5Z" fill="#f06292"/>${wmouth(60, 65.5)}${blush(39, 81, 64)}
+        <path d="M44,66 l-16,-3 M44,69 l-15,2 M76,66 l16,-3 M76,69 l15,2" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>`;
+      break;
+    }
+    case 'puppy': {
+      const c = '#d9a066', ear = '#8d5a3b', cream = '#fff8ee';
+      s = `<path class="pet-tail" d="M82,98 Q104,96 104,76 Q108,72 110,78 Q110,104 84,106Z" fill="${G(c)}" ${O(c)}/>
+        <ellipse cx="60" cy="92" rx="25" ry="22" fill="${G(c)}" ${O(c)}/><ellipse cx="60" cy="96" rx="13" ry="15" fill="${cream}"/>
+        <ellipse cx="49" cy="111" rx="8.5" ry="5.5" fill="${G(cream)}" ${O(c)}/><ellipse cx="71" cy="111" rx="8.5" ry="5.5" fill="${G(cream)}" ${O(c)}/>
+        <path d="M42,76 Q60,84 78,76" stroke="#e53935" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="60" cy="82" r="4" fill="#ffd54f" stroke="#c49000"/>
+        <ellipse cx="60" cy="52" rx="30" ry="27" fill="${G(c)}" ${O(c)}/>
+        <path d="M34,34 Q18,40 22,66 Q26,76 34,70 Q40,52 40,38Z" fill="${G(ear)}" ${O(ear)}/><path d="M86,34 Q102,40 98,66 Q94,76 86,70 Q80,52 80,38Z" fill="${G(ear)}" ${O(ear)}/>
+        <ellipse cx="72" cy="44" rx="9" ry="8" fill="${ear}" opacity=".45"/>
+        <ellipse cx="60" cy="65" rx="15" ry="11" fill="${G(cream)}"/>
+        ${eye(48, 50, 6, '#6d4c41')}${eye(72, 50, 6, '#6d4c41')}
+        <ellipse cx="60" cy="59" rx="5.5" ry="4" fill="#3e2723"/><ellipse cx="58.5" cy="57.8" rx="1.8" ry="1" fill="#fff" opacity=".7"/>
+        <path d="M60,63 V66" stroke="#3e2723" stroke-width="1.6"/>${wmouth(60, 66, '#3e2723')}<path d="M57,68 Q60,77 63,68Z" fill="#f06292"/>${blush(40, 80, 62)}`;
+      break;
+    }
+    case 'bunny': {
+      const c = '#fbf7f4', pink = '#f8a5c2';
+      s = `<circle class="pet-tail" cx="85" cy="100" r="9" fill="${G('#ffffff')}" ${O('#e0d6d0')}/>
+        <ellipse cx="60" cy="94" rx="24" ry="20" fill="${G(c)}" ${O('#d7ccc8')}/>
+        <ellipse cx="49" cy="111" rx="8" ry="5" fill="${G(c)}" ${O('#d7ccc8')}/><ellipse cx="71" cy="111" rx="8" ry="5" fill="${G(c)}" ${O('#d7ccc8')}/>
+        <path d="M46,38 Q32,4 42,2 Q54,4 56,34Z" fill="${G(c)}" ${O('#d7ccc8')}/><path d="M46,32 Q38,10 43,8 Q50,10 52,32Z" fill="${pink}"/>
+        <path d="M66,34 Q82,6 98,14 Q100,24 74,40Z" fill="${G(c)}" ${O('#d7ccc8')}/><path d="M70,34 Q84,14 94,17 Q94,22 74,37Z" fill="${pink}"/>
+        <ellipse cx="60" cy="56" rx="27" ry="25" fill="${G(c)}" ${O('#d7ccc8')}/>
+        ${eye(49, 54, 5.6, '#8d6e63')}${eye(71, 54, 5.6, '#8d6e63')}
+        <path d="M57,62 Q60,60 63,62 Q60,65.5 57,62Z" fill="#f06292"/>${wmouth(60, 66)}<rect x="57.6" y="66.5" width="4.8" height="4" rx="1" fill="#fff" stroke="#d7ccc8" stroke-width=".8"/>${blush(41, 79, 64)}
+        <g transform="translate(78 36)">${flower(0, 0, 3.6, '#ffd54f', '#ff8a65')}</g>`;
+      break;
+    }
+    case 'fox': {
+      const c = '#f57c3a', w = '#fffaf2', dk = '#4e342e';
+      s = `<path class="pet-tail" d="M80,104 C116,108 120,72 104,56 C100,74 92,86 80,90Z" fill="${G(c)}" ${O(c)}/><path d="M104,56 C112,64 114,74 112,82 C106,76 102,66 104,56Z" fill="${w}"/>
+        <ellipse cx="60" cy="94" rx="23" ry="20" fill="${G(c)}" ${O(c)}/><path d="M48,80 Q60,104 72,80 Q66,110 60,110 Q54,110 48,80Z" fill="${w}"/>
+        <ellipse cx="49" cy="111" rx="7.5" ry="5" fill="${dk}"/><ellipse cx="71" cy="111" rx="7.5" ry="5" fill="${dk}"/>
+        <path d="M30,46 L32,12 L56,32Z" fill="${G(c)}" ${O(c)}/><path d="M90,46 L88,12 L64,32Z" fill="${G(c)}" ${O(c)}/>
+        <path d="M32,12 L31.5,22 L38,18Z M88,12 L88.5,22 L82,18Z" fill="${dk}"/><path d="M36,38 L37,22 L50,33Z M84,38 L83,22 L70,33Z" fill="${w}" opacity=".9"/>
+        <path d="M28,54 Q30,26 60,26 Q90,26 92,54 Q90,70 60,82 Q30,70 28,54Z" fill="${G(c)}" ${O(c)}/>
+        <path d="M30,56 Q44,58 52,66 Q56,78 60,80 Q64,78 68,66 Q76,58 90,56 Q86,72 60,84 Q34,72 30,56Z" fill="${w}"/>
+        ${eye(46, 52, 5.6, '#ff9800')}${eye(74, 52, 5.6, '#ff9800')}
+        <ellipse cx="60" cy="70" rx="4.2" ry="3.2" fill="${dk}"/>${wmouth(60, 74.5)}${blush(38, 82, 62)}`;
+      break;
+    }
+    case 'unicorn': {
+      const c = '#fdfbff', hoof = '#ffd54f', mane = ['#f48fb1', '#ce93d8', '#81d4fa', '#a5d6a7', '#fff59d'];
+      s = `<path class="pet-tail" d="M88,86 Q112,84 110,106 Q104,96 92,98Z" fill="${mane[1]}"/><path d="M90,92 Q108,94 104,112 Q98,102 88,100Z" fill="${mane[2]}"/>
+        <ellipse cx="62" cy="88" rx="30" ry="17" fill="${G(c)}" ${O('#d1c4e9')}/>
+        ${[42, 54, 72, 84].map(x => `<rect x="${x - 4.5}" y="92" width="9" height="20" rx="4.5" fill="${G(c)}" ${O('#d1c4e9')}/><rect x="${x - 4.5}" y="107" width="9" height="6" rx="2" fill="${hoof}"/>`).join('')}
+        <path d="M30,84 Q26,58 40,46 L58,58 Q50,72 50,86Z" fill="${G(c)}" ${O('#d1c4e9')}/>
+        <ellipse cx="42" cy="42" rx="22" ry="19" fill="${G(c)}" ${O('#d1c4e9')}/><ellipse cx="28" cy="50" rx="11" ry="9" fill="${G('#f8d7e8')}"/><circle cx="24" cy="49" r="1.6" fill="#c2185b"/>
+        <path d="M44,24 L54,22 L50,2Z" fill="${G(hoof)}" stroke="#c49000" stroke-width="1.3"/><path d="M45.5,18 L52,15 M47.5,11 L51.5,9" stroke="#c49000" stroke-width="1.3"/>
+        <path d="M56,26 L62,18 L62,30Z" fill="${G(c)}" ${O('#d1c4e9')}/>
+        ${mane.map((m, i) => `<circle cx="${58 + i * 2}" cy="${28 + i * 9}" r="${8 - i * 0.6}" fill="${m}"/>`).join('')}
+        ${eye(42, 40, 5.4, '#7e57c2', true)}${blush(34, 34, 50)}`;
+      break;
+    }
+    case 'dragon': {
+      const c = '#5cbf6a', belly = '#fff3b0', wing = '#b39ddb';
+      s = `<path class="pet-tail" d="M80,102 Q104,110 106,88 L114,82 L104,80 L104,90 Q100,100 82,96Z" fill="${G(c)}" ${O(c)}/>
+        <path d="M34,74 Q10,52 14,40 Q22,52 30,50 Q24,62 38,70Z" fill="${G(wing)}" ${O(wing)}/><path d="M86,74 Q110,52 106,40 Q98,52 90,50 Q96,62 82,70Z" fill="${G(wing)}" ${O(wing)}/>
+        <ellipse cx="60" cy="92" rx="25" ry="21" fill="${G(c)}" ${O(c)}/><ellipse cx="60" cy="96" rx="14" ry="15" fill="${belly}"/>
+        <path d="M48,90 H72 M47,97 H73 M49,104 H71" stroke="#e6cf6a" stroke-width="1.5"/>
+        <ellipse cx="48" cy="111" rx="8" ry="5" fill="${G(c)}" ${O(c)}/><ellipse cx="72" cy="111" rx="8" ry="5" fill="${G(c)}" ${O(c)}/>
+        <path d="M42,30 L36,10 L50,26Z M78,30 L84,10 L70,26Z" fill="${G(belly)}" stroke="#c9a92c" stroke-width="1.3"/>
+        <path d="M54,26 L60,16 L66,26Z" fill="#ff8a65"/>
+        <ellipse cx="60" cy="52" rx="30" ry="26" fill="${G(c)}" ${O(c)}/>
+        <ellipse cx="60" cy="66" rx="15" ry="9" fill="${G('#8bd99a')}"/><circle cx="55" cy="64" r="1.6" fill="#2e7d32"/><circle cx="65" cy="64" r="1.6" fill="#2e7d32"/>
+        ${eye(47, 50, 6, '#ffb300')}${eye(73, 50, 6, '#ffb300')}
+        <path d="M53,70 Q60,75 67,70" stroke="#2e7d32" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M63,71.5 l1.5,3 l1.5,-3.6Z" fill="#fff"/>${blush(38, 82, 60)}`;
+      break;
+    }
+    case 'owl': {
+      const c = '#9c7356', chest = '#f1e2cf';
+      s = `<path class="pet-tail" d="M28,62 Q14,86 30,104 Q34,84 36,70Z M92,62 Q106,86 90,104 Q86,84 84,70Z" fill="${G(shade(c, -0.1))}" ${O(c)}/>
+        <path d="M30,40 L28,16 L46,30Z M90,40 L92,16 L74,30Z" fill="${G(c)}" ${O(c)}/>
+        <ellipse cx="60" cy="68" rx="32" ry="42" fill="${G(c)}" ${O(c)}/>
+        <ellipse cx="60" cy="84" rx="20" ry="22" fill="${G(chest)}"/>
+        ${[[52, 78], [68, 78], [60, 86], [52, 94], [68, 94], [60, 102]].map(([x, y]) => `<path d="M${x - 5},${y} Q${x},${y + 5} ${x + 5},${y}" stroke="#c9ad8f" stroke-width="1.6" fill="none"/>`).join('')}
+        <circle cx="46" cy="50" r="14" fill="${G('#fff8ee')}" ${O('#d7c3ad')}/><circle cx="74" cy="50" r="14" fill="${G('#fff8ee')}" ${O('#d7c3ad')}/>
+        ${eye(46, 50, 7.4, '#ffb300')}${eye(74, 50, 7.4, '#ffb300')}
+        <path d="M55,60 L65,60 L60,70Z" fill="${G('#ffb74d')}" stroke="#e08a00" stroke-width="1.2"/>
+        ${[50, 56, 64, 70].map(x => `<path d="M${x},108 v6" stroke="#f0a400" stroke-width="3.2" stroke-linecap="round"/>`).join('')}${blush(34, 86, 66)}`;
+      break;
+    }
+    case 'penguin': {
+      const c = '#2f3e66';
+      s = `<path class="pet-tail" d="M30,60 Q14,80 24,96 Q30,84 34,72Z M90,60 Q106,80 96,96 Q90,84 86,72Z" fill="${G(c)}" ${O(c)}/>
+        <ellipse cx="50" cy="111" rx="10" ry="4.5" fill="${G('#ffa726')}"/><ellipse cx="70" cy="111" rx="10" ry="4.5" fill="${G('#ffa726')}"/>
+        <ellipse cx="60" cy="68" rx="31" ry="43" fill="${G(c)}" ${O(c)}/>
+        <path d="M60,40 Q44,26 38,46 Q34,62 42,80 Q40,104 60,108 Q80,104 78,80 Q86,62 82,46 Q76,26 60,40Z" fill="${G('#ffffff')}"/>
+        ${eye(50, 54, 5.4, '#5c6bc0')}${eye(70, 54, 5.4, '#5c6bc0')}
+        <path d="M54,63 Q60,60 66,63 Q60,72 54,63Z" fill="${G('#ffa726')}" stroke="#e08a00" stroke-width="1"/>${blush(41, 79, 64)}
+        <path d="M34,80 Q60,92 86,80 L86,88 Q60,100 34,88Z" fill="#e53935"/><path d="M76,86 L80,104 L88,100 L82,84Z" fill="#c62828"/>`;
+      break;
+    }
+    case 'frog': {
+      const c = '#7cc84a', belly = '#e8f7c8';
+      s = `<ellipse cx="34" cy="108" rx="14" ry="6" fill="${G(c)}" ${O(c)}/><ellipse cx="86" cy="108" rx="14" ry="6" fill="${G(c)}" ${O(c)}/>
+        <ellipse cx="60" cy="86" rx="32" ry="24" fill="${G(c)}" ${O(c)}/><ellipse cx="60" cy="92" rx="18" ry="16" fill="${belly}"/>
+        <ellipse cx="60" cy="58" rx="34" ry="22" fill="${G(c)}" ${O(c)}/>
+        <circle cx="40" cy="40" r="14" fill="${G(c)}" ${O(c)}/><circle cx="80" cy="40" r="14" fill="${G(c)}" ${O(c)}/>
+        ${eye(40, 40, 7, '#5d4037')}${eye(80, 40, 7, '#5d4037')}
+        <path d="M40,64 Q60,78 80,64" stroke="#2e6b1c" stroke-width="2.2" fill="none" stroke-linecap="round"/>${blush(34, 86, 62)}
+        <path d="M46,30 L48,20 L54,27 L60,16 L66,27 L72,20 L74,30Z" fill="${G('#ffd54f')}" stroke="#c49000" stroke-width="1.2"/>`;
+      break;
+    }
+    case 'mouse': {
+      const c = '#b0a8b9', pink = '#f8a5c2';
+      s = `<path class="pet-tail" d="M82,104 Q112,108 108,84 Q106,74 98,78" stroke="${pink}" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="60" cy="94" rx="23" ry="19" fill="${G(c)}" ${O(c)}/><ellipse cx="60" cy="98" rx="12" ry="13" fill="#efeaf2"/>
+        <ellipse cx="50" cy="111" rx="7" ry="4.5" fill="${pink}"/><ellipse cx="70" cy="111" rx="7" ry="4.5" fill="${pink}"/>
+        <circle cx="32" cy="34" r="18" fill="${G(c)}" ${O(c)}/><circle cx="32" cy="34" r="11" fill="${pink}"/><circle cx="88" cy="34" r="18" fill="${G(c)}" ${O(c)}/><circle cx="88" cy="34" r="11" fill="${pink}"/>
+        <ellipse cx="60" cy="58" rx="27" ry="24" fill="${G(c)}" ${O(c)}/>
+        ${eye(49, 55, 5.6, '#4e342e')}${eye(71, 55, 5.6, '#4e342e')}
+        <circle cx="60" cy="66" r="3.6" fill="#f06292"/>${wmouth(60, 70)}${blush(40, 80, 66)}
+        <path d="M46,66 l-14,-3 M46,69 l-13,2 M74,66 l14,-3 M74,69 l13,2" stroke="#7d7488" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M40,80 Q60,92 80,80 L76,88 Q60,96 44,88Z" fill="#4fc3f7"/>`;
+      break;
+    }
     default: return '';
   }
-  return `<g class="pet-body">${s}</g>`;
+  return `<defs>${defs}</defs><g class="pet-body">${s}</g>`;
 }
 
 // ---------- stage backdrops (800 x 600, sliced to fit) ----------

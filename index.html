@@ -21,7 +21,12 @@
     <div id="fx"></div>
     <div id="hero"><svg id="char" viewBox="-10 -30 220 375"></svg></div>
     <div id="petwrap"><svg id="pet" viewBox="0 0 120 120"></svg></div>
-    <div id="nameTag"></div>
+    <button id="nameTag" aria-label="Change name"><span id="nameText"></span> <span class="pencil">✏️</span></button>
+    <form id="renameBox" hidden>
+      <label for="nameInput">New name</label>
+      <input id="nameInput" maxlength="24" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
+      <div class="rbtns"><button type="button" id="nameReset">Original</button><button type="submit" id="nameSave">Save ✓</button></div>
+    </form>
     <button id="surprise" aria-label="Surprise outfit">🎲</button>
     <button id="danceBtn"><span>💃</span> Dance!</button>
   </section>

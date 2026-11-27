@@ -10,6 +10,7 @@ const HAIR_COLORS = [
 
 const HAIR_STYLES = [
   { id: 'long', name: 'Long' },
+  { id: 'longbraid', name: 'Super Long Braid' },
   { id: 'wavy', name: 'Wavy' },
   { id: 'braids', name: 'Braids' },
   { id: 'bun', name: 'Bun' },
@@ -47,6 +48,8 @@ const OUTFITS = [
   { id: 'goldcoat', name: 'Golden Coat', type: 'coat', main: '#fff3e0', top: '#fff3e0', trim: '#ffb300', sleeve: 'epaulette', pants: '#5d4037', pattern: 'none' },
   { id: 'explorer', name: 'Explorer Vest', type: 'explorer', main: '#8d6e63', top: '#fff8e1', trim: '#ffb74d', sleeve: 'short', pants: '#455a64', pattern: 'none' },
   { id: 'captain', name: 'Sea Captain', type: 'explorer', main: '#1565c0', top: '#ffffff', trim: '#ffd54f', sleeve: 'long', pants: '#ffffff', pattern: 'stripes' },
+  { id: 'starball', name: 'Starlight Ball Gown', type: 'gown', main: '#e8f1ff', top: '#bcd4ff', trim: '#9ec5ff', sleeve: 'cap', pattern: 'sparkle', panel: '#ffffff' },
+  { id: 'meadow', name: 'Meadow Gown', type: 'gown', main: '#fff59d', top: '#f48fb1', trim: '#ffffff', sleeve: 'puff', pattern: 'flowers' },
   { id: 'pjstars', name: 'Cozy Star Pajamas', type: 'pajamas', main: '#b39ddb', top: '#b39ddb', trim: '#fff59d', sleeve: 'long', pants: '#b39ddb', pattern: 'stars' },
   { id: 'pjhearts', name: 'Cozy Heart Pajamas', type: 'pajamas', main: '#f8bbd0', top: '#f8bbd0', trim: '#ffffff', sleeve: 'long', pants: '#f8bbd0', pattern: 'hearts' }
 ];
@@ -121,7 +124,9 @@ const PETS = [
   { id: 'unicorn', name: 'Unicorn' },
   { id: 'dragon', name: 'Baby Dragon' },
   { id: 'owl', name: 'Owl' },
-  { id: 'penguin', name: 'Penguin' }
+  { id: 'penguin', name: 'Penguin' },
+  { id: 'frog', name: 'Froggy' },
+  { id: 'mouse', name: 'Little Mouse' }
 ];
 
 const STAGES = [
@@ -155,6 +160,25 @@ const DANCES = [
 
 // Each friend has a starting look. Every piece can be changed afterwards.
 const FRIENDS = [
+  // Friends inspired by old fairy tales (all original designs)
+  { id: 'goldie', name: 'Princess Goldie', tale: 'The girl with the longest hair', skin: 0, hair: 'longbraid', hairColor: '#f2c75c', eyes: '#43a047', lashes: true,
+    look: { outfit: 'meadow', hat: 'flowers', shoes: 'barefoot', item: 'lantern', cape: 'none', pet: 'frog' } },
+  { id: 'astrid', name: 'Snow Queen Astrid', tale: 'The queen of ice and snow', skin: 0, hair: 'long', hairColor: '#f6ecd2', eyes: '#4fc3f7', lashes: true,
+    look: { outfit: 'frost', hat: 'snow', shoes: 'crystal', item: 'wand', cape: 'snowcape', pet: 'penguin' } },
+  { id: 'ella', name: 'Princess Ella', tale: 'The girl who lost a crystal shoe at the ball', skin: 1, hair: 'bun', hairColor: '#f2c75c', eyes: '#1e88e5', lashes: true,
+    look: { outfit: 'starball', hat: 'tiara', shoes: 'crystal', item: 'none', cape: 'none', pet: 'mouse' } },
+  { id: 'briar', name: 'Princess Briar', tale: 'The sleepy princess of the rose castle', skin: 0, hair: 'wavy', hairColor: '#d9a441', eyes: '#7e57c2', lashes: true,
+    look: { outfit: 'rose', hat: 'crown', shoes: 'pink', item: 'bouquet', cape: 'rosecape', pet: 'owl' } },
+  { id: 'marina', name: 'Princess Marina', tale: 'The mermaid who loved to sing', skin: 2, hair: 'wavy', hairColor: '#6cb6f0', eyes: '#00897b', lashes: true,
+    look: { outfit: 'ocean', hat: 'shell', shoes: 'barefoot', item: 'mirror', cape: 'none', pet: 'penguin' } },
+  { id: 'blanca', name: 'Princess Blanca', tale: 'The princess with seven tiny friends', skin: 0, hair: 'bob', hairColor: '#2b1d16', eyes: '#5d4037', lashes: true,
+    look: { outfit: 'ruby', hat: 'bow', shoes: 'gold', item: 'bouquet', cape: 'none', pet: 'bunny' } },
+  { id: 'bella', name: 'Princess Bella', tale: 'The book lover in the enchanted castle', skin: 2, hair: 'ponytail', hairColor: '#7a4a26', eyes: '#6d4c41', lashes: true,
+    look: { outfit: 'garden', hat: 'none', shoes: 'boots', item: 'book', cape: 'none', pet: 'mouse' } },
+  { id: 'finn', name: 'Prince Finn', tale: 'The prince who was once a frog', skin: 1, hair: 'curly', hairColor: '#7a4a26', eyes: '#43a047', lashes: false,
+    look: { outfit: 'archer', hat: 'princecrown', shoes: 'boots', item: 'none', cape: 'leaf', pet: 'frog' } },
+  { id: 'jack', name: 'Prince Jack', tale: 'The boy who climbed the giant beanstalk', skin: 3, hair: 'spiky', hairColor: '#4a2c1a', eyes: '#4e342e', lashes: false,
+    look: { outfit: 'explorer', hat: 'beret', shoes: 'boots', item: 'lantern', cape: 'none', pet: 'puppy' } },
   { id: 'rosalind', name: 'Princess Rosalind', skin: 0, hair: 'wavy', hairColor: '#a2442a', eyes: '#3b7a57', lashes: true,
     look: { outfit: 'rose', hat: 'tiara', shoes: 'pink', item: 'bouquet', cape: 'none', pet: 'kitty' } },
   { id: 'amara', name: 'Princess Amara', skin: 4, hair: 'puffs', hairColor: '#2b1d16', eyes: '#5d3a1a', lashes: true,
