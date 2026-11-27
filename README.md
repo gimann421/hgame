@@ -25,5 +25,6 @@ If you don't hear any music, check that the iPad isn't muted and that the volume
 - `js/draw.js`: draws the characters, pets and backgrounds as SVG
 - `js/music.js`: a small Web Audio synthesizer that plays the songs
 - `js/app.js`: how the game works
+- `icon.png`, `icon-1024.png`: the home-screen icon (`node make-icon.js icon-1024.png` redraws it)
 
 There's no build step. These are plain files.
