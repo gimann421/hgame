@@ -1,6 +1,6 @@
 // Keeps a copy of the game on the device so it opens and plays with no internet.
 // When any game file changes, bump VERSION so devices pick up the new copy.
-const VERSION = 'rdp-2';
+const VERSION = 'rdp-3';
 const FILES = ['./', 'index.html', 'style.css', 'js/data.js', 'js/draw.js', 'js/music.js', 'js/app.js',
   'manifest.webmanifest', 'icon.png', 'icon-192.png', 'icon-512.png'];
 
