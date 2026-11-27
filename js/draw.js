@@ -709,7 +709,10 @@ function drawStage(id) {
       for (const x of [120, 400, 680]) s += `<path d="M${x - 70},360 V170 Q${x},70 ${x + 70},170 V360Z" fill="#b2ebf2" stroke="#fff" stroke-width="10"/><path d="M${x},100 V360 M${x - 70},250 H${x + 70}" stroke="#fff" stroke-width="5"/>`;
       for (const x of [260, 540]) s += `<rect x="${x - 18}" y="80" width="36" height="300" fill="#fce4ec"/><rect x="${x - 26}" y="70" width="52" height="16" fill="#fff"/>`;
       s += `<rect y="380" width="800" height="220" fill="#f48fb1"/><ellipse cx="400" cy="500" rx="330" ry="80" fill="#80cbc4"/><ellipse cx="400" cy="500" rx="270" ry="58" fill="#b2dfdb"/><ellipse cx="400" cy="500" rx="120" ry="26" fill="#80cbc4"/>`;
-      s += `<path d="M400,0 V40" stroke="#ffd54f" stroke-width="3"/><path d="M340,40 Q400,90 460,40Z" fill="#ffe082"/>` + [350, 375, 400, 425, 450].map(x => `<circle cx="${x}" cy="62" r="5" fill="#fff"/>`).join('');
+      // curtain valance across the top: scalloped swags with a gold trim
+      s += `<rect width="800" height="34" fill="#c2185b"/>`;
+      for (let x = 0; x < 800; x += 100) s += `<path d="M${x},30 Q${x + 50},96 ${x + 100},30Z" fill="#d81b60"/><path d="M${x},30 Q${x + 50},96 ${x + 100},30" fill="none" stroke="#ffd54f" stroke-width="5"/>`;
+      s += `<path d="M0,32 H800" stroke="#ffd54f" stroke-width="5"/>`;
       break;
     case 'ice':
       s = `<defs><linearGradient id="gi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fc3f7"/><stop offset="1" stop-color="#e1f5fe"/></linearGradient></defs><rect width="800" height="600" fill="url(#gi)"/>`;

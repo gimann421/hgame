@@ -23,6 +23,22 @@
   let S = { ...friendState(FRIENDS[0]), stage: 'ballroom', dance: 'twirl', track: 'pop', tab: 'friends', names: {} };
   try { const saved = JSON.parse(localStorage.getItem(SAVE_KEY)); if (saved && saved.friend) S = { ...S, ...saved }; } catch (e) {}
   if (!S.names || typeof S.names !== 'object') S.names = {};
+  // An old or damaged save must never break the game: drop anything unknown.
+  {
+    const ok = (list, v) => list.some(x => x.id === v);
+    const base = friendState(byId(FRIENDS, S.friend));
+    if (!ok(FRIENDS, S.friend)) Object.assign(S, base);
+    for (const [k, list] of [['outfit', OUTFITS], ['hair', HAIR_STYLES], ['hat', HATS], ['shoes', SHOES], ['item', ITEMS], ['cape', CAPES], ['pet', PETS]])
+      if (!ok(list, S[k])) S[k] = ok(list, base[k]) ? base[k] : list[0].id;
+    if (!ok(STAGES, S.stage)) S.stage = 'ballroom';
+    if (!ok(DANCES, S.dance)) S.dance = 'twirl';
+    if (!ok(TRACKS, S.track)) S.track = 'pop';
+    if (!ok(TABS, S.tab)) S.tab = 'friends';
+    if (!SKIN[S.skin]) S.skin = base.skin;
+    if (typeof S.hairColor !== 'string' || !/^#[0-9a-f]{3,8}$/i.test(S.hairColor)) S.hairColor = base.hairColor;
+    for (const id of Object.keys(S.names)) if (!ok(FRIENDS, id) || typeof S.names[id] !== 'string') delete S.names[id];
+  }
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const nameOf = id => S.names[id] || byId(FRIENDS, id).name;
   const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -47,7 +63,7 @@
   function tilesFor(tab) {
     const cv = charView(S);
     switch (tab) {
-      case 'friends': return FRIENDS.map(f => tile(f.id, S.names[f.id] || f.name.replace(/^(Princess|Prince|Snow Queen) /, ''), svg('30 -10 140 175', drawCharacter(charView(friendState(f)))), S.friend === f.id)).join('');
+      case 'friends': return FRIENDS.map(f => tile(f.id, S.names[f.id] ? esc(S.names[f.id]) : f.name.replace(/^(Princess|Prince|Snow Queen) /, ''), svg('30 -10 140 175', drawCharacter(charView(friendState(f)))), S.friend === f.id)).join('');
       case 'outfit': return OUTFITS.map(o => tile(o.id, o.name, svg(BODY, drawCharacter({ ...cv, outfit: o.id, item: 'none', cape: 'none' })), S.outfit === o.id)).join('');
       case 'hair':
         return `<div class="swatches">${HAIR_COLORS.map(c => `<button class="swatch${S.hairColor === c ? ' sel' : ''}" data-color="${c}" style="background:${c}" aria-label="hair color"></button>`).join('')}</div>` +

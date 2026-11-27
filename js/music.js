@@ -141,8 +141,16 @@ const Music = (() => {
   function tick() {
     if (!playing) return;
     const sdur = 60 / song.t.bpm / 2;
+    // After the screen sleeps or the app is in the background, skip the missed
+    // notes instead of playing them all at once.
+    if (nextTime < ctx.currentTime - 0.1) nextTime = ctx.currentTime + 0.05;
     while (nextTime < ctx.currentTime + 0.15) { playStep(step, nextTime); nextTime += sdur; step++; }
   }
+
+  // Coming back to the app (or after a phone call / lock screen) wakes the sound up again.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && ctx && playing && ctx.state !== 'running') ctx.resume();
+  });
 
   return {
     unlock() {
