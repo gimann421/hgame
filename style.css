@@ -7,25 +7,47 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body {
-  margin: 0; height: 100%; overflow: hidden; background: #2a1550;
+  margin: 0; min-height: 100%; background: #2a1550;
   font-family: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", system-ui, sans-serif;
   color: var(--ink);
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
-  touch-action: manipulation; overscroll-behavior: none;
+  touch-action: manipulation;
 }
 button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
 
+/* The whole page scrolls (the most reliable kind of touch scrolling on iPhone and iPad).
+   The stage stays pinned while the clothes and dance lists scroll past. */
 #app {
-  position: fixed; inset: 0;
-  display: grid; grid-template-columns: 1fr minmax(340px, 40%);
-  gap: 12px; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  --pad: 12px; --top: max(var(--pad), env(safe-area-inset-top, 0px));
+  --stageH: calc(100vh - var(--pad) * 2); --tabsTop: var(--top);
+  display: grid; grid-template-columns: 1fr minmax(340px, 40%); align-items: start;
+  gap: 12px; padding: var(--top) max(var(--pad), env(safe-area-inset-right, 0px)) max(var(--pad), env(safe-area-inset-bottom, 0px)) max(var(--pad), env(safe-area-inset-left, 0px));
 }
+@supports (height: 100svh) { #app { --stageH: calc(100svh - var(--pad) * 2); } }
+.stage { position: sticky; top: var(--top); height: var(--stageH); z-index: 20; }
+#panel { min-height: var(--stageH); }
+#tabs { position: sticky; top: var(--tabsTop); z-index: 10; }
 @media (orientation: portrait) {
-  #app { grid-template-columns: 1fr; grid-template-rows: 57% 1fr; }
+  #app { grid-template-columns: 1fr; --stageH: 55vh; --tabsTop: calc(var(--top) + var(--stageH) + 12px); }
+  @supports (height: 100svh) { #app { --stageH: 55svh; } }
+  #panel { min-height: 0; }
+}
+/* Phones: smaller stage and smaller tab buttons, so there's room for the lists */
+@media (orientation: portrait) and (max-width: 600px) {
+  #app { --stageH: 42vh; }
+  @supports (height: 100svh) { #app { --stageH: 42svh; } }
+  #tabs { gap: 4px; padding: 6px; }
+  #tabs .tab { flex: 1 0 14%; min-height: 44px; border-radius: 12px; }
+  #tabs .tab .ti { font-size: 20px; }
+  #tabs .tab .tl { font-size: 10px; }
+  #stage #danceBtn { padding: 10px 18px; font-size: 20px; }
+  #stage #surprise { width: 52px; height: 52px; font-size: 28px; }
+  #items.items { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+  #items .tile .art { height: 92px; }
 }
 
 /* ---------- stage ---------- */
-.stage { position: relative; overflow: hidden; border-radius: 28px; background: #f8bbd0; box-shadow: 0 6px 0 rgba(0,0,0,.25); }
+.stage { overflow: hidden; border-radius: 28px; background: #f8bbd0; box-shadow: 0 6px 0 rgba(0,0,0,.25); }
 #bg, #bg svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 #fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
 #hero {
@@ -90,13 +112,13 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 @keyframes spark { from { transform: translate(0,0) scale(.4); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(1.2); opacity: 0; } }
 
 /* ---------- panel ---------- */
-#panel { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-radius: 28px; overflow: hidden; box-shadow: 0 6px 0 rgba(0,0,0,.25); }
-#tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: linear-gradient(180deg, #b388ff, #7c4dff); }
+#panel { display: flex; flex-direction: column; background: var(--panel); border-radius: 28px; box-shadow: 0 6px 0 rgba(0,0,0,.25); }
+#tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: linear-gradient(180deg, #b388ff, #7c4dff); border-radius: 28px 28px 0 0; box-shadow: 0 4px 10px rgba(61,36,102,.2); }
 .tab { flex: 1 0 60px; min-height: 62px; border-radius: 16px; background: rgba(255,255,255,.25); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 2px; }
 .tab .ti { font-size: 28px; line-height: 1.1; }
 .tab .tl { font-size: 12px; font-weight: 800; letter-spacing: .2px; }
 .tab.sel { background: #fff; color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,.15); }
-.items { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; align-content: start; }
+.items { padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; align-content: start; }
 .tile { background: #fff; border-radius: 20px; padding: 6px 6px 8px; box-shadow: 0 4px 0 #e6d6f5; border: 3px solid transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .tile:active { transform: translateY(3px); box-shadow: 0 1px 0 #e6d6f5; }
 .tile.sel { border-color: var(--pink); background: #fff0f7; }
@@ -296,3 +318,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 @keyframes shimmyR { 0%,100% { transform: rotate(-130deg); } 50% { transform: rotate(-145deg); } }
 
 @media (prefers-reduced-motion: reduce) { .note { display: none; } }
+
+/* Cover the gap above the sticky tabs so scrolled tiles don't peek through */
+#tabs::before { content: ""; position: absolute; left: -14px; right: -14px; bottom: 100%; height: calc(var(--top) + 2px); background: #2a1550; }
+@media (orientation: portrait) { #tabs::before { height: 14px; } }

@@ -66,10 +66,15 @@
     $('#tabs').innerHTML = TABS.map(t => `<button class="tab${S.tab === t.id ? ' sel' : ''}" data-tab="${t.id}"><span class="ti">${t.icon}</span><span class="tl">${t.label}</span></button>`).join('');
   }
   function renderItems(keepScroll) {
-    const box = $('#items'), top = box.scrollTop;
+    const box = $('#items');
     box.className = 'items tab-' + S.tab;
     box.innerHTML = tilesFor(S.tab);
-    box.scrollTop = keepScroll ? top : 0;
+    if (!keepScroll) { // jump back to the top of the list when switching tabs
+      const portrait = window.matchMedia('(orientation: portrait)').matches;
+      const pinned = portrait ? $('#stage').getBoundingClientRect().bottom + 12 : 12;
+      const y = $('#panel').getBoundingClientRect().top + window.scrollY - pinned;
+      if (window.scrollY > y) window.scrollTo(0, Math.max(0, y));
+    }
     if (S.tab === 'item') box.querySelectorAll('.art svg').forEach(el => {
       try { const b = el.getBBox(), pad = 8, side = Math.max(b.width, b.height) + pad * 2;
         el.setAttribute('viewBox', `${b.x + b.width / 2 - side / 2} ${b.y + b.height / 2 - side / 2} ${side} ${side}`); } catch (e) {}
