@@ -14,7 +14,13 @@ All of the characters, art and music are original. None of them come from any fi
 
 ## Playing on an iPad
 
-Open `index.html` in Safari. To make it work like an app, tap **Share → Add to Home Screen**. It then opens full screen with its own icon.
+The game is a website: https://gimann421.github.io/hgame/ (served by GitHub Pages from this repo).
+
+1. Open that link in **Safari**.
+2. Tap **Share** (the square with the arrow) → **Add to Home Screen** → **Add**.
+3. Open it from the new princess icon. It runs full screen with no Safari bars, and after the first visit it works without internet.
+
+Changes pushed to the Pages branch show up the next time the game is opened while online.
 
 If you don't hear any music, check that the iPad isn't muted and that the volume is turned up.
 
@@ -25,6 +31,7 @@ If you don't hear any music, check that the iPad isn't muted and that the volume
 - `js/draw.js`: draws the characters, pets and backgrounds as SVG
 - `js/music.js`: a small Web Audio synthesizer that plays the songs
 - `js/app.js`: how the game works
-- `icon.png`, `icon-1024.png`: the home-screen icon (`node make-icon.js icon-1024.png` redraws it)
+- `manifest.webmanifest`, `sw.js`: make it installable and playable offline
+- `icon.png`, `icon-192.png`, `icon-512.png`, `icon-1024.png`: the home-screen icon (`node make-icon.js icon-1024.png` redraws it)
 
 There's no build step. These are plain files.
