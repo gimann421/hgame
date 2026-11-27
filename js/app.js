@@ -18,7 +18,7 @@
   ];
 
   function friendState(f) {
-    return { friend: f.id, skin: f.skin, hair: f.hair, hairColor: f.hairColor, eyes: f.eyes, lashes: f.lashes, ...f.look };
+    return { friend: f.id, kind: f.kind, skin: f.skin, hair: f.hair, hairColor: f.hairColor, eyes: f.eyes, lashes: f.lashes, ...f.look };
   }
   let S = { ...friendState(FRIENDS[0]), stage: 'ballroom', dance: 'twirl', track: 'pop', tab: 'friends', names: {} };
   try { const saved = JSON.parse(localStorage.getItem(SAVE_KEY)); if (saved && saved.friend) S = { ...S, ...saved }; } catch (e) {}
@@ -28,7 +28,8 @@
     const ok = (list, v) => list.some(x => x.id === v);
     const base = friendState(byId(FRIENDS, S.friend));
     if (!ok(FRIENDS, S.friend)) Object.assign(S, base);
-    for (const [k, list] of [['outfit', OUTFITS], ['hair', HAIR_STYLES], ['hat', HATS], ['shoes', SHOES], ['item', ITEMS], ['cape', CAPES], ['pet', PETS]])
+    if (S.hair === 'none' && base.hair !== 'none') S.hair = base.hair;
+    for (const [k, list] of [['outfit', OUTFITS], ['hair', [...HAIR_STYLES, { id: 'none' }]], ['hat', HATS], ['shoes', SHOES], ['item', ITEMS], ['cape', CAPES], ['pet', PETS]])
       if (!ok(list, S[k])) S[k] = ok(list, base[k]) ? base[k] : list[0].id;
     if (!ok(STAGES, S.stage)) S.stage = 'ballroom';
     if (!ok(DANCES, S.dance)) S.dance = 'twirl';
@@ -63,7 +64,7 @@
   function tilesFor(tab) {
     const cv = charView(S);
     switch (tab) {
-      case 'friends': return FRIENDS.map(f => tile(f.id, S.names[f.id] ? esc(S.names[f.id]) : f.name.replace(/^(Princess|Prince|Snow Queen) /, ''), svg('30 -10 140 175', drawCharacter(charView(friendState(f)))), S.friend === f.id)).join('');
+      case 'friends': return FRIENDS.map(f => tile(f.id, S.names[f.id] ? esc(S.names[f.id]) : f.name.replace(/^(Princess|Prince|Snow Queen) /, '').replace(/ the .*$/, ''), svg('30 -10 140 175', drawCharacter(charView(friendState(f)))), S.friend === f.id)).join('');
       case 'outfit': return OUTFITS.map(o => tile(o.id, o.name, svg(BODY, drawCharacter({ ...cv, outfit: o.id, item: 'none', cape: 'none' })), S.outfit === o.id)).join('');
       case 'hair':
         return `<div class="swatches">${HAIR_COLORS.map(c => `<button class="swatch${S.hairColor === c ? ' sel' : ''}" data-color="${c}" style="background:${c}" aria-label="hair color"></button>`).join('')}</div>` +

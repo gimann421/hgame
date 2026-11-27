@@ -51,6 +51,7 @@ const OUTFITS = [
   { id: 'starball', name: 'Starlight Ball Gown', type: 'gown', main: '#e8f1ff', top: '#bcd4ff', trim: '#9ec5ff', sleeve: 'cap', pattern: 'sparkle', panel: '#ffffff' },
   { id: 'meadow', name: 'Meadow Gown', type: 'gown', main: '#fff59d', top: '#f48fb1', trim: '#ffffff', sleeve: 'puff', pattern: 'flowers' },
   { id: 'pjstars', name: 'Cozy Star Pajamas', type: 'pajamas', main: '#b39ddb', top: '#b39ddb', trim: '#fff59d', sleeve: 'long', pants: '#b39ddb', pattern: 'stars' },
+  { id: 'mountain', name: 'Mountain Sweater', type: 'tunic', main: '#c0392b', top: '#c0392b', trim: '#f5e6c8', sleeve: 'long', pants: '#6d4c41', pattern: 'none' },
   { id: 'pjhearts', name: 'Cozy Heart Pajamas', type: 'pajamas', main: '#f8bbd0', top: '#f8bbd0', trim: '#ffffff', sleeve: 'long', pants: '#f8bbd0', pattern: 'hearts' }
 ];
 
@@ -68,7 +69,8 @@ const HATS = [
   { id: 'wizard', name: 'Wizard Hat' },
   { id: 'bunny', name: 'Bunny Ears' },
   { id: 'cat', name: 'Kitty Ears' },
-  { id: 'shell', name: 'Seashell Clip' }
+  { id: 'shell', name: 'Seashell Clip' },
+  { id: 'beanie', name: 'Knit Hat' }
 ];
 
 const SHOES = [
@@ -100,7 +102,8 @@ const ITEMS = [
   { id: 'sword', name: 'Toy Sword' },
   { id: 'book', name: 'Story Book' },
   { id: 'cupcake', name: 'Cupcake' },
-  { id: 'mirror', name: 'Hand Mirror' }
+  { id: 'mirror', name: 'Hand Mirror' },
+  { id: 'iceaxe', name: 'Ice Pick' }
 ];
 
 const CAPES = [
@@ -126,7 +129,9 @@ const PETS = [
   { id: 'owl', name: 'Owl' },
   { id: 'penguin', name: 'Penguin' },
   { id: 'frog', name: 'Froggy' },
-  { id: 'mouse', name: 'Little Mouse' }
+  { id: 'mouse', name: 'Little Mouse' },
+  { id: 'chameleon', name: 'Chameleon' },
+  { id: 'reindeer', name: 'Reindeer' }
 ];
 
 const STAGES = [
@@ -162,7 +167,7 @@ const DANCES = [
 const FRIENDS = [
   // Friends inspired by old fairy tales (all original designs)
   { id: 'goldie', name: 'Princess Goldie', tale: 'The girl with the longest hair', skin: 0, hair: 'longbraid', hairColor: '#f2c75c', eyes: '#43a047', lashes: true,
-    look: { outfit: 'meadow', hat: 'flowers', shoes: 'barefoot', item: 'lantern', cape: 'none', pet: 'frog' } },
+    look: { outfit: 'meadow', hat: 'flowers', shoes: 'barefoot', item: 'lantern', cape: 'none', pet: 'chameleon' } },
   { id: 'astrid', name: 'Snow Queen Astrid', tale: 'The queen of ice and snow', skin: 0, hair: 'long', hairColor: '#f6ecd2', eyes: '#4fc3f7', lashes: true,
     look: { outfit: 'frost', hat: 'snow', shoes: 'crystal', item: 'wand', cape: 'snowcape', pet: 'penguin' } },
   { id: 'ella', name: 'Princess Ella', tale: 'The girl who lost a crystal shoe at the ball', skin: 1, hair: 'bun', hairColor: '#f2c75c', eyes: '#1e88e5', lashes: true,
@@ -179,6 +184,10 @@ const FRIENDS = [
     look: { outfit: 'archer', hat: 'princecrown', shoes: 'boots', item: 'none', cape: 'leaf', pet: 'frog' } },
   { id: 'jack', name: 'Prince Jack', tale: 'The boy who climbed the giant beanstalk', skin: 3, hair: 'spiky', hairColor: '#4a2c1a', eyes: '#4e342e', lashes: false,
     look: { outfit: 'explorer', hat: 'beret', shoes: 'boots', item: 'lantern', cape: 'none', pet: 'puppy' } },
+  { id: 'flurry', name: 'Flurry the Snowman', tale: 'A snowman friend who woke up on the first snowy day', kind: 'snowman', skin: 0, hair: 'none', hairColor: '#4e342e', eyes: '#4e342e', lashes: false,
+    look: { outfit: 'royalcoat', hat: 'none', shoes: 'barefoot', item: 'none', cape: 'none', pet: 'penguin' } },
+  { id: 'bjorn', name: 'Bjorn the Ice Harvester', tale: 'The ice harvester from the snowy mountains and his reindeer', skin: 1, hair: 'short', hairColor: '#e2b95a', eyes: '#6d4c41', lashes: false,
+    look: { outfit: 'mountain', hat: 'beanie', shoes: 'boots', item: 'iceaxe', cape: 'none', pet: 'reindeer' } },
   { id: 'rosalind', name: 'Princess Rosalind', skin: 0, hair: 'wavy', hairColor: '#a2442a', eyes: '#3b7a57', lashes: true,
     look: { outfit: 'rose', hat: 'tiara', shoes: 'pink', item: 'bouquet', cape: 'none', pet: 'kitty' } },
   { id: 'amara', name: 'Princess Amara', skin: 4, hair: 'puffs', hairColor: '#2b1d16', eyes: '#5d3a1a', lashes: true,
