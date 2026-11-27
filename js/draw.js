@@ -131,10 +131,10 @@ function shoe(sh, x, y, dir, skin) {
     case 'crystal':
       return toe(c, ` opacity=".92" stroke="#fff" stroke-width="1.6"`) + `<path d="${starPath(fx + dir * 3.5, y + 1, 3.2, 1, 4)}" fill="#fff"/>`;
     case 'boot':
-      return `<rect x="${x - 8.7}" y="${y - 36}" width="17.4" height="38" rx="5" fill="${c}"/><rect x="${x - 8.9}" y="${y - 36}" width="17.8" height="5.5" rx="2.5" fill="${a}"/>` + sole(shade(c, -0.35)) + toe(c);
+      return `<rect x="${x - 7.6}" y="${y - 36}" width="15.2" height="38" rx="5" fill="${c}"/><rect x="${x - 7.9}" y="${y - 36}" width="15.8" height="5.5" rx="2.5" fill="${a}"/>` + sole(shade(c, -0.35)) + toe(c);
     case 'fluffy':
-      return `<rect x="${x - 8.8}" y="${y - 27}" width="17.6" height="29" rx="6" fill="#90caf9"/>` + sole('#64b5f6') + toe('#90caf9') +
-        `<ellipse cx="${x}" cy="${y - 26}" rx="9" ry="5" fill="#fff"/><circle cx="${x - 4.5}" cy="${y - 27.5}" r="2.6" fill="#fff"/><circle cx="${x + 4.5}" cy="${y - 27}" r="2.6" fill="#fff"/>`;
+      return `<rect x="${x - 7.8}" y="${y - 27}" width="15.6" height="29" rx="6" fill="#90caf9"/>` + sole('#64b5f6') + toe('#90caf9') +
+        `<ellipse cx="${x}" cy="${y - 26}" rx="8.4" ry="4.6" fill="#fff"/><circle cx="${x - 4.5}" cy="${y - 27.5}" r="2.6" fill="#fff"/><circle cx="${x + 4.5}" cy="${y - 27}" r="2.6" fill="#fff"/>`;
     case 'sneaker':
       return sole('#ffffff', 4.8) + toe(c) + `<path d="M${fx - 4.5},${y - 0.6} H${fx + 4.5}" stroke="#ff8a80" stroke-width="1.5" stroke-linecap="round"/><path d="M${fx - 4.5},${y + 1.8} H${fx + 4.5}" stroke="#ffeb3b" stroke-width="1.5" stroke-linecap="round"/>`;
     case 'sandal':
@@ -249,7 +249,7 @@ function hat(id, off) {
     case 'wizard': s = `<ellipse cx="100" cy="50" rx="48" ry="10" fill="#4527a0"/><path d="M70,50 Q90,-8 112,-24 Q118,8 130,50Z" fill="#5e35b1"/><path d="${starPath(98, 22, 6, 2.5)}" fill="#ffd54f"/><path d="${starPath(112, 38, 4, 1.6)}" fill="#ffd54f"/><circle cx="86" cy="40" r="2" fill="#fff59d"/>`; break;
     case 'bunny': s = `<path d="M66,70 C66,38 134,38 134,70" stroke="#fff" stroke-width="5" fill="none"/><ellipse cx="82" cy="18" rx="9" ry="28" fill="#fff" transform="rotate(-12 82 18)"/><ellipse cx="82" cy="20" rx="4.5" ry="20" fill="#f8bbd0" transform="rotate(-12 82 20)"/><ellipse cx="118" cy="18" rx="9" ry="28" fill="#fff" transform="rotate(12 118 18)"/><ellipse cx="118" cy="20" rx="4.5" ry="20" fill="#f8bbd0" transform="rotate(12 118 20)"/>`; break;
     case 'cat': s = `<path d="M66,70 C66,38 134,38 134,70" stroke="#212121" stroke-width="5" fill="none"/><path d="M70,52 L72,22 L94,42Z" fill="#212121"/><path d="M76,46 L77,30 L88,41Z" fill="#f48fb1"/><path d="M130,52 L128,22 L106,42Z" fill="#212121"/><path d="M124,46 L123,30 L112,41Z" fill="#f48fb1"/>`; break;
-    case 'beanie': s = `<path d="M62,62 C60,22 140,22 138,62Z" fill="#2e7d32"/><path d="M74,30 Q100,22 126,30 M68,42 Q100,32 132,42" stroke="#43a047" stroke-width="3" fill="none"/><rect x="60" y="54" width="80" height="13" rx="6" fill="#1b5e20"/><path d="M66,60 H134" stroke="#66bb6a" stroke-width="2" stroke-dasharray="3 3"/><circle cx="100" cy="20" r="9" fill="#f5f5f5"/><circle cx="97" cy="17" r="3" fill="#fff"/>`; break;
+    case 'beanie': s = `<circle cx="100" cy="17" r="9.5" fill="#f5f5f5"/><circle cx="97" cy="14" r="3" fill="#fff"/><path d="M61,60 C59,14 141,14 139,60Z" fill="#2e7d32"/><path d="M70,40 Q100,30 130,40 M64,51 Q100,41 136,51" stroke="#43a047" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M84,24 Q82,40 84,56 M100,22 V56 M116,24 Q118,40 116,56" stroke="#276a2b" stroke-width="1.6" fill="none" opacity=".6"/><rect x="59" y="54" width="82" height="13" rx="6" fill="#1b5e20"/><path d="M66,60.5 H134" stroke="#66bb6a" stroke-width="2" stroke-dasharray="3 3"/>`; break;
     case 'shell': s = `<g transform="translate(128 58) rotate(20)"><path d="M-12,6 Q0,-18 12,6Z" fill="#ffab91"/><path d="M0,6 L0,-10 M-6,6 L-3,-8 M6,6 L3,-8" stroke="#ff7043" stroke-width="1.5"/><circle cx="0" cy="8" r="3" fill="#fff"/></g><circle cx="76" cy="58" r="3" fill="#fff"/><circle cx="70" cy="66" r="2.4" fill="#fff"/>`; break;
     default: return '';
   }
@@ -378,7 +378,7 @@ function arm(side, o, skin, itemId) {
 
 function twigArm(side, itemId) {
   const L = side === 'L', dir = L ? -1 : 1;
-  const sx = L ? 74 : 126, sy = 152, hx = L ? 72 : 128, hy = 201;
+  const sx = L ? 70 : 130, sy = 150, hx = L ? 72 : 128, hy = 201;
   const ex = sx + dir * 14, ey = 176; // elbow bend
   const tw = '#6d4c41';
   let s = `<path d="M${sx},${sy} L${ex},${ey} L${hx},${hy - 4}" stroke="${tw}" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
@@ -485,11 +485,11 @@ function drawCharacter(st, yaw = 0, pose = null) {
   const mirror = (px, x0) => cs < 0 ? `translate(${px.toFixed(2)} 0) scale(-1 1) translate(${-x0} 0)` : `translate(${(px - x0).toFixed(2)} 0)`;
   const leg = (side) => {
     if (o.type === 'mermaid' || snow) return { z: 0, svg: '' };
-    const x0 = side === 'L' ? 92 : 108, p = bodyX(x0, 9);
+    const x0 = side === 'L' ? 91 : 109, p = bodyX(x0, 9);
     const dir = (Math.abs(sn) > 0.45 ? Math.sign(sn) : (side === 'L' ? -1 : 1)) * (cs < 0 ? -1 : 1);
-    let pants = `<rect x="${x0 - 7.5}" y="198" width="15" height="${o.pants ? 120 : 124}" rx="7" fill="${legCol}"/>`;
-    if (o.pants) pants += `<rect x="${x0 - 8.5}" y="${306}" width="17" height="6" rx="3" fill="${shade(legCol, -0.12)}"/>`;
-    if (o.type === 'pajamas') pants += patternFill(o.pattern, `M${x0 - 7.5},198 h15 v120 h-15Z`, P.colors, [x0 - 8, 196, x0 + 8, 320]);
+    let pants = `<rect x="${x0 - 6.5}" y="198" width="13" height="124" rx="4" fill="${legCol}"/>`;
+    if (o.pants) pants += `<rect x="${x0 - 7.3}" y="${309}" width="14.6" height="6" rx="3" fill="${shade(legCol, -0.12)}"/>`;
+    if (o.type === 'pajamas') pants += patternFill(o.pattern, `M${x0 - 6.5},198 h13 v120 h-13Z`, P.colors, [x0 - 7, 196, x0 + 7, 320]);
     return { z: p.z, svg: `<g transform="${mirror(p.x, x0)}"><g class="p-leg${side}">${pants}${shoe(sh, x0, 320, dir, sk)}</g></g>` };
   };
   const armSvg = (side) => {
@@ -512,10 +512,10 @@ function drawCharacter(st, yaw = 0, pose = null) {
   const w = (0.74 + 0.26 * Math.abs(cs)).toFixed(3);
   const snowBall = (cy, r) => `<circle cx="100" cy="${cy}" r="${r}" fill="url(#snowball)"/><path d="M${100 - r * 0.7},${cy + r * 0.55} Q100,${cy + r * 1.02} ${100 + r * 0.7},${cy + r * 0.55}" stroke="#d6e4f5" stroke-width="3" fill="none" opacity=".8"/>`;
   const snowDefs = `<defs><radialGradient id="snowball" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#f1f6fd"/><stop offset="1" stop-color="#d3e1f2"/></radialGradient></defs>`;
-  const coal = snow ? [154, 174, 194].map(y => placed(100, yaw, `<circle cx="100" cy="${y}" r="3.6" fill="#37474f"/><circle cx="99" cy="${y - 1.2}" r="1" fill="#90a4ae"/>`)).join('') : '';
+  const coal = snow ? [140, 157, 174].map(y => placed(100, yaw, `<circle cx="100" cy="${y}" r="3.6" fill="#37474f"/><circle cx="99" cy="${y - 1.2}" r="1" fill="#90a4ae"/>`)).join('') : '';
   const scarf = snow ? `<path d="M70,124 Q100,140 130,124 L131,134 Q100,150 69,134Z" fill="${o.main}"/><path d="M76,128 Q100,140 124,128" stroke="${o.trim}" stroke-width="2.5" fill="none" stroke-dasharray="5 4"/>` +
     (cs > -0.2 ? `<path d="M${(112 + sn * 6).toFixed(1)},134 L${(118 + sn * 6).toFixed(1)},170 L${(128 + sn * 6).toFixed(1)},167 L${(122 + sn * 6).toFixed(1)},133Z" fill="${o.main}"/><path d="M${(118 + sn * 6).toFixed(1)},170 l-1,5 M${(123 + sn * 6).toFixed(1)},169 l0,5 M${(128 + sn * 6).toFixed(1)},167 l1,5" stroke="${o.trim}" stroke-width="2" stroke-linecap="round"/>` : '') : '';
-  const torso = snow ? `${snowDefs}${snowBall(172, 42)}${coal}${scarf}` : `<g transform="translate(100 0) scale(${w} 1) translate(-100 0)">
+  const torso = snow ? `${snowDefs}${snowBall(154, 35)}${coal}${scarf}` : `<g transform="translate(100 0) scale(${w} 1) translate(-100 0)">
     <rect x="93.5" y="108" width="13" height="26" rx="5" fill="${sk}"/><path d="M93.5,116 Q100,121 106.5,116" stroke="${shade(sk, -0.12)}" stroke-width="3" fill="none"/>
     ${P.torso}${cs < -0.15 ? torsoBack(o) : ''}${cs > 0.15 ? capeCollar(st.cape) : ''}</g>`;
 
@@ -565,7 +565,7 @@ function drawCharacter(st, yaw = 0, pose = null) {
     <g class="p-head">${turning ? `<g transform="${sheetT}">${sheet}</g>` : sheet}</g>
     ${armsBehind}
     ${legs}
-    <g class="p-skirt">${snow ? snowBall(264, 60) : P.skirt}</g>
+    <g class="p-skirt">${snow ? `<ellipse cx="100" cy="318" rx="44" ry="5" fill="#000" opacity=".08"/><circle cx="84" cy="304" r="14" fill="url(#snowball)"/><circle cx="116" cy="304" r="14" fill="url(#snowball)"/>${snowBall(240, 52)}` : P.skirt}</g>
     ${torso}
     ${sheetFront}
     ${capeInFront ? capeSvg : ''}
